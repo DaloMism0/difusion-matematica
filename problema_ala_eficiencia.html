@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Problema: la velocidad y el ángulo más eficientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0A0F1C;
+    --bg-panel:#111A2C;
+    --bg-panel-2:#0E1626;
+    --line:#233150;
+    --accent:#FFB020;
+    --accent-dim:#8A611C;
+    --cool:#3FA7FF;
+    --hot:#FF5A4E;
+    --good:#4ADE80;
+    --bad:#526078;
+    --text-hi:#EAF2FF;
+    --text-lo:#7C90B0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg-deep);color:var(--text-hi);
+    font-family:'Inter','Segoe UI',sans-serif; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 44px;}
+
+  header{margin-bottom:18px;}
+  .kicker{font-family:'Space Grotesk',sans-serif;font-size:12px;letter-spacing:0.04em;color:var(--accent);margin:0 0 6px 0;}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:25px;letter-spacing:-0.01em;margin:0 0 8px 0;}
+  header p{margin:0;color:var(--text-lo);font-size:14.5px;line-height:1.55;max-width:66ch;}
+  header p b{color:var(--text-hi);font-weight:600;}
+
+  .grid{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-top:18px;}
+  @media (max-width:760px){.grid{grid-template-columns:1fr;}}
+
+  .stage{position:relative;border:1px solid var(--line);border-radius:4px;overflow:hidden;
+    background:radial-gradient(ellipse 90% 70% at 50% 30%, #14213A 0%, #0A0F1C 75%);}
+  canvas{display:block;width:100%;height:auto;}
+  .stage-label{position:absolute;top:12px;left:14px;font-family:'Space Grotesk',sans-serif;font-size:11px;color:var(--text-lo);letter-spacing:0.04em;}
+  .status-badge{
+    position:absolute; top:12px; right:14px;
+    font-family:'Space Grotesk',sans-serif; font-size:12.5px; font-weight:600;
+    padding:6px 12px; border-radius:3px; letter-spacing:0.02em;
+    transition:background 0.2s, color 0.2s;
+  }
+  .status-fly{background:rgba(74,222,128,0.14); color:var(--good); border:1px solid rgba(74,222,128,0.4);}
+  .status-fall{background:rgba(255,90,78,0.14); color:var(--hot); border:1px solid rgba(255,90,78,0.4);}
+
+  .panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:4px;padding:16px 18px;}
+  .ctrl-row{margin-bottom:16px;}
+  .ctrl-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .ctrl-name{font-size:13px;color:var(--text-lo);}
+  .ctrl-value{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;}
+  .ctrl-value.blue{color:var(--cool);}
+  input[type=range]{-webkit-appearance:none;width:100%;height:28px;background:transparent;cursor:pointer;}
+  input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--line);border-radius:2px;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;
+    border-radius:50%;background:var(--accent);border:2px solid #0A0F1C;box-shadow:0 0 0 3px rgba(255,176,32,0.18);}
+  input[type=range]#aoa::-webkit-slider-thumb{background:var(--cool);box-shadow:0 0 0 3px rgba(63,167,255,0.18);}
+  input[type=range]::-moz-range-track{height:4px;background:var(--line);border-radius:2px;}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid #0A0F1C;}
+  .scale-marks{display:flex;justify-content:space-between;font-size:11px;color:var(--text-lo);margin-top:2px;}
+
+  .gauge-row{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);}
+  .gauge-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .gauge-name{font-size:13px;color:var(--text-lo);}
+  .gauge-pct{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .gauge-track{height:14px;background:var(--bg-panel-2);border:1px solid var(--line);border-radius:7px;overflow:hidden;}
+  .gauge-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--bad),var(--cool),var(--good));transition:width 0.15s linear;}
+  .temp-label{margin-top:10px;font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;letter-spacing:0.01em;}
+
+  .solved-banner{
+    margin-top:14px; padding:12px 14px; border-radius:4px;
+    background:rgba(74,222,128,0.10); border:1px solid rgba(74,222,128,0.4);
+    display:none; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .solved-banner.show{display:flex;}
+  .solved-banner span{font-size:13px; color:var(--good); font-weight:600;}
+  .solved-banner button{white-space:nowrap;}
+
+  .map-panel{margin-top:14px;background:var(--bg-panel);border:1px solid var(--line);border-radius:4px;padding:16px 18px;}
+  .map-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .map-title{font-family:'Space Grotesk',sans-serif;font-size:13px;color:var(--text-lo);letter-spacing:0.02em;}
+  .map-howto{font-size:13px;line-height:1.55;color:var(--text-lo);margin:0 0 12px 0;max-width:78ch;}
+  .map-howto b{color:var(--text-hi);font-weight:600;}
+  #mapCanvas{width:100%;height:auto;display:block;border-radius:3px;}
+  .map-legend{display:flex;gap:16px;margin-top:10px;font-size:11.5px;color:var(--text-lo);align-items:center;flex-wrap:wrap;}
+  .swatch{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;position:relative;top:1px;}
+
+  button{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:500;
+    background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text-hi);
+    padding:9px 14px;border-radius:3px;cursor:pointer;}
+  button:hover{border-color:var(--accent-dim);}
+  button.primary{background:var(--good);color:#052012;border-color:var(--good);}
+  button.primary:hover{background:#6BEA9C;}
+
+  .reveal{margin-top:14px;font-size:13px;line-height:1.6;color:var(--text-lo);
+    border-top:1px solid var(--line);padding-top:14px;display:none;}
+  .reveal.show{display:block;}
+  .reveal code{color:var(--text-hi);background:var(--bg-panel-2);padding:2px 6px;border-radius:3px;font-size:12.5px;}
+  .reveal-toggle{margin-top:16px;text-align:center;}
+  .reveal-toggle a{color:var(--text-lo);font-size:12px;text-decoration:underline;cursor:pointer;}
+  .advanced-toggle{margin-top:16px;}
+  .advanced-toggle a{color:var(--accent);font-size:12.5px;text-decoration:underline;cursor:pointer;}
+  .advanced-panel{display:none;margin-top:12px;padding-top:14px;border-top:1px dashed var(--line);}
+  .advanced-panel.show{display:block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">PROBLEMA 1 — MATEMÁTICA APLICADA A LA AERODINÁMICA</p>
+    <h1>Encuentra la configuración más eficiente</h1>
+    <p>Ajusta la <b>velocidad</b> y el <b>ángulo del ala</b>. El avión necesita suficiente sustentación para no caer — pero volar rápido o con mucho ángulo también gasta más combustible. Busca la combinación que lo mantenga en el aire gastando la menor cantidad de combustible posible.</p>
+  </header>
+
+  <div class="grid">
+    <div class="stage">
+      <span class="stage-label">TÚNEL DE VIENTO — VISTA LATERAL</span>
+      <span class="status-badge status-fly" id="statusBadge">EN VUELO</span>
+      <canvas id="c" width="1100" height="520"></canvas>
+    </div>
+
+    <div class="panel">
+      <div class="ctrl-row">
+        <div class="ctrl-head">
+          <span class="ctrl-name">Velocidad del avión</span>
+          <span class="ctrl-value" id="velVal">500 km/h</span>
+        </div>
+        <input type="range" id="vel" min="100" max="1000" value="500" step="5">
+        <div class="scale-marks"><span>despegue lento</span><span>crucero rápido</span></div>
+      </div>
+      <div class="ctrl-row">
+        <div class="ctrl-head">
+          <span class="ctrl-name">Ángulo del ala</span>
+          <span class="ctrl-value blue" id="aoaVal">6°</span>
+        </div>
+        <input type="range" id="aoa" min="-8" max="18" value="6" step="0.5">
+        <div class="scale-marks"><span>picada</span><span>encabritado</span></div>
+      </div>
+
+      <div class="gauge-row">
+        <div class="gauge-head">
+          <span class="gauge-name">Eficiencia de combustible</span>
+          <span class="gauge-pct" id="gaugePct">—</span>
+        </div>
+        <div class="gauge-track"><div class="gauge-fill" id="gaugeFill"></div></div>
+        <div class="temp-label" id="tempLabel">—</div>
+      </div>
+
+      <div class="solved-banner" id="solvedBanner">
+        <span>¡Encontraste una configuración muy eficiente!</span>
+        <button class="primary" id="revealBtn">Ver por qué</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="map-panel">
+    <div class="map-head">
+      <span class="map-title">MAPA DE EXPLORACIÓN — cada intento deja una marca</span>
+    </div>
+    <p class="map-howto">Cada vez que mueves un slider, se dibuja un punto en el lugar donde probaste (velocidad en el eje horizontal, ángulo en el eje vertical). El color te dice qué tan buena fue esa combinación. El círculo grande con borde blanco es donde estás <b>ahora mismo</b>.</p>
+    <canvas id="mapCanvas" width="1040" height="380"></canvas>
+    <div class="map-legend">
+      <span><span class="swatch" style="background:#526078;"></span>no vuela</span>
+      <span><span class="swatch" style="background:#FF5A4E;"></span>vuela, poco eficiente</span>
+      <span><span class="swatch" style="background:#3FA7FF;"></span>vuela, eficiencia media</span>
+      <span><span class="swatch" style="background:#4ADE80;"></span>vuela, muy eficiente</span>
+    </div>
+
+    <div class="reveal" id="revealPanel">
+      <p><b style="color:var(--text-hi)">Lo que descubriste, explicado:</b></p>
+
+      <p>Gracias a las matemáticas sabemos que la sustentación de un ala depende del cuadrado de la velocidad, y de cuánto se aleja el ángulo del ala de su <b style="color:var(--text-hi)">ángulo natural</b> (el ángulo en el que, solo por su forma curva, el ala ya genera algo de sustentación sin esfuerzo — aquí, aproximadamente <code>-4.7°</code>, el mismo ángulo que curva las líneas del viento en la animación):</p>
+      <p><code>sustentación ≈ velocidad² × (ángulo − ángulo natural)</code></p>
+
+      <p>Gracias a las matemáticas también sabemos que el combustible gastado no depende de una sola cosa, sino de dos efectos que compiten entre sí — viajar rápido siempre cuesta, y forzar un ángulo grande para conseguir sustentación también cuesta:</p>
+      <p><code>combustible ≈ k_velocidad × velocidad² + k_ángulo × (ángulo − ángulo natural)²</code></p>
+
+      <p>Gracias a las matemáticas sabemos que, cuando dos efectos así compiten, existe exactamente un punto donde el gasto total es mínimo — justo el que encontraste explorando: aproximadamente <b style="color:var(--text-hi)">430 km/h</b> y <b style="color:var(--text-hi)">8°</b>. Volar más lento obliga a un ángulo excesivo; volar más rápido gasta de más solo por la velocidad. El punto óptimo equilibra ambos costos.</p>
+
+      <div class="advanced-toggle"><a id="toggleAdvanced">mostrar/ocultar la explicación matemática avanzada</a></div>
+      <div class="advanced-panel" id="advancedPanel">
+        <p><b style="color:var(--text-hi)">¿De dónde viene todo esto? (contexto matemático, sin fórmulas)</b></p>
+
+        <p>La forma del ala que ves en la animación no la dibujó nadie a mano: es el resultado de una idea matemática hermosa de hace más de cien años. La idea es la siguiente: analizar cómo el aire rodea un círculo (o un cilindro) es un problema fácil, resuelto desde el siglo XIX. Lo difícil es un ala real, con su forma alargada y curva. Un matemático ruso llamado Nikolái Zhukovski descubrió que, usando herramientas de <b style="color:var(--text-hi)">variable compleja</b> (números que tienen una parte "imaginaria"), se puede "estirar" matemáticamente ese círculo hasta convertirlo exactamente en la silueta de un ala — y lo notable es que el comportamiento del aire alrededor del círculo se transforma junto con la forma, entregando la solución exacta para el ala sin tener que resolverla desde cero. Esa es literalmente la relación entre una esfera (o un círculo, en el corte 2D que usamos aquí) y el ala: el ala es un círculo "disfrazado" mediante esta transformación.</p>
+
+        <p><b style="color:var(--text-hi)">Los supuestos detrás de la simulación:</b> para que este problema se pudiera resolver con matemática de lápiz y papel (sin necesidad de una supercomputadora), se hicieron varias simplificaciones fuertes: se ignora el roce interno del aire (se le llama flujo "no viscoso"), se asume que el aire no se comprime, se analiza solo un corte en dos dimensiones del ala (ignorando que un avión real tiene alas de largo finito, con remolinos en las puntas), y se asume que el flujo es estable en el tiempo. Cada uno de esos supuestos, al eliminarlo, hace el problema enormemente más difícil: de hecho, las ecuaciones que describen el aire real con roce (viscosidad) — las ecuaciones de Navier-Stokes — son tan difíciles que todavía no se ha demostrado matemáticamente si sus soluciones siempre existen y se comportan bien; es uno de los problemas abiertos más famosos de las matemáticas, con un premio de un millón de dólares ofrecido a quien lo resuelva.</p>
+
+        <p><b style="color:var(--text-hi)">Y el combustible es todavía más idealizado:</b> el modelo de gasto de combustible que usa este juego no viene de resolver ecuaciones de vuelo reales, sino que fue construido a propósito, de forma mucho más simple, solo para conservar la forma general del problema real (dos efectos que compiten, con un mínimo en el medio) sin todo el aparato matemático necesario para calcularlo con precisión.</p>
+
+        <p><b style="color:var(--text-hi)">La idea central:</b> este problema, incluso en su versión más simple, esconde matemática profunda — variable compleja, ecuaciones diferenciales, problemas que ni siquiera están resueltos del todo en su forma general. Un avión real agrega mucho más: aire que se comprime a alta velocidad, turbulencia (que es en parte caótica e impredecible), un motor con su propio comportamiento, cambios de altura y temperatura. Ningún matemático resuelve todo eso "a mano" de una sola vez. Lo que hacen, en cambio, es exactamente lo que hicimos aquí: buscar una versión simplificada que ya capture algo verdadero del problema, resolver esa versión, y luego ir agregando capas de realismo una por una — con ayuda de simulaciones numéricas y supercomputadores para las partes que ya no se pueden resolver a mano. La conclusión no es que esto sea simple. Es que, con trabajo, paciencia y muchas capas de matemática construidas durante generaciones, sí se puede resolver.</p>
+      </div>
+    </div>
+    <div class="reveal-toggle"><a id="toggleReveal">mostrar/ocultar la explicación matemática</a></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ============================================================
+  // PART 1 — wind-flow visualization (Joukowski potential flow)
+  // ============================================================
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const W_ = canvas.width, H_ = canvas.height;
+
+  const cAdd=(a,b)=>[a[0]+b[0],a[1]+b[1]];
+  const cSub=(a,b)=>[a[0]-b[0],a[1]-b[1]];
+  const cMul=(a,b)=>[a[0]*b[0]-a[1]*b[1], a[0]*b[1]+a[1]*b[0]];
+  const cDiv=(a,b)=>{const d=b[0]*b[0]+b[1]*b[1]; return [(a[0]*b[0]+a[1]*b[1])/d,(a[1]*b[0]-a[0]*b[1])/d];};
+  const cAbs=(a)=>Math.hypot(a[0],a[1]);
+
+  const e_=0.10, f_=0.09;
+  const C=[-e_, f_];
+  const r=Math.hypot(1+e_, f_);
+  const thetaTE=Math.atan2(-f_, 1+e_);
+
+  function zetaToZ(zeta){ return cAdd(zeta, cDiv([1,0], zeta)); }
+
+  const airfoilPts=[];
+  const NSEG=160;
+  for(let i=0;i<=NSEG;i++){
+    const th=(i/NSEG)*Math.PI*2;
+    const zeta=cAdd(C,[r*Math.cos(th), r*Math.sin(th)]);
+    airfoilPts.push(zetaToZ(zeta));
+  }
+
+  const scale=130;
+  const originX=W_*0.44, originY=H_*0.60;
+  function rotateZ(z, ang){
+    const c=Math.cos(ang), s=Math.sin(ang);
+    return [z[0]*c - z[1]*s, z[0]*s + z[1]*c];
+  }
+  // The flow is solved in the airfoil's own frame (chord along x, wind arriving
+  // at angle `alpha`). To make the WIND look horizontal on screen and instead
+  // show the WING pitching, we rotate every point by -alpha before projecting.
+  function toPx(z){
+    const rz = rotateZ(z, -alpha);
+    return [originX+rz[0]*scale, originY-rz[1]*scale];
+  }
+
+  let U=140/40, alphaDeg=6, alpha=alphaDeg*Math.PI/180, Gamma=0, UkmhGlobal=500;
+  function recomputeGamma(){ Gamma=4*Math.PI*U*r*Math.sin(alpha-thetaTE); }
+  recomputeGamma();
+
+  function velocityAt(zeta){
+    const zp=cSub(zeta,C);
+    const eNeg=[Math.cos(alpha),-Math.sin(alpha)];
+    const ePos=[Math.cos(alpha), Math.sin(alpha)];
+    const term1=[U*eNeg[0], U*eNeg[1]];
+    const zp2=cMul(zp,zp);
+    const r2overzp2=cDiv([r*r,0], zp2);
+    const term2=cMul([U*ePos[0],U*ePos[1]], r2overzp2);
+    const term3=cDiv([0, Gamma/(2*Math.PI)], zp);
+    const dwdzeta=cSub(cAdd(term1,term3), term2);
+    const Vzeta=[dwdzeta[0], -dwdzeta[1]];
+    const zeta2=cMul(zeta,zeta);
+    const invzeta2=cDiv([1,0], zeta2);
+    const dzdzeta=[1-invzeta2[0], -invzeta2[1]];
+    const dwdz=cDiv(dwdzeta, dzdzeta);
+    const Vz=[dwdz[0], -dwdz[1]];
+    return {Vzeta, Vz};
+  }
+
+  const N=200;
+  const XMIN=-3.6, XMAX=3.2, YMAX=1.6;
+  let particles=[];
+  function spawnOne(atEdge){
+    let y;
+    if(Math.random()<0.55){ y=(Math.random()-0.5)*1.0; }
+    else{ y=(Math.random()-0.5)*(YMAX*2)*0.95; }
+    const x = atEdge ? XMIN : XMIN+Math.random()*(XMAX-XMIN);
+    return {zeta:[x,y], prevPx:null};
+  }
+  function initParticles(){ particles=[]; for(let i=0;i<N;i++) particles.push(spawnOne(false)); }
+  initParticles();
+
+  const dt=0.020;
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function speedColor(speed){
+    const ratio=Math.min(Math.max(speed/U,0.4),1.8);
+    const t=(ratio-0.4)/(1.8-0.4);
+    const c1=[63,167,255], c2=[255,176,32], c3=[255,90,78];
+    let col;
+    if(t<0.5){ const tt=t/0.5; col=[lerp(c1[0],c2[0],tt),lerp(c1[1],c2[1],tt),lerp(c1[2],c2[2],tt)]; }
+    else{ const tt=(t-0.5)/0.5; col=[lerp(c2[0],c3[0],tt),lerp(c2[1],c3[1],tt),lerp(c2[2],c3[2],tt)]; }
+    return `rgb(${col[0]|0},${col[1]|0},${col[2]|0})`;
+  }
+  function drawParticleSeg(prevPx,px,speed){
+    if(!prevPx) return;
+    ctx.strokeStyle=speedColor(speed);
+    ctx.lineWidth=1.6; ctx.globalAlpha=0.9;
+    ctx.beginPath(); ctx.moveTo(prevPx[0],prevPx[1]); ctx.lineTo(px[0],px[1]); ctx.stroke();
+  }
+  function stepFlow(){
+    for(const p of particles){
+      const zp=cSub(p.zeta,C);
+      if(cAbs(zp)<r*1.015){ Object.assign(p, spawnOne(true)); p.prevPx=null; continue; }
+      if(p.zeta[0]>XMAX || Math.abs(p.zeta[1])>YMAX){ Object.assign(p, spawnOne(true)); p.prevPx=null; continue; }
+      const k1=velocityAt(p.zeta).Vzeta;
+      const mid=cAdd(p.zeta,[k1[0]*dt/2, k1[1]*dt/2]);
+      const k2=velocityAt(mid);
+      const newZeta=cAdd(p.zeta,[k2.Vzeta[0]*dt, k2.Vzeta[1]*dt]);
+      const speed=cAbs(k2.Vz);
+      const zPos=zetaToZ(newZeta);
+      const px=toPx(zPos);
+      drawParticleSeg(p.prevPx, px, speed);
+      p.zeta=newZeta; p.prevPx=px;
+    }
+  }
+  function drawAirfoil(){
+    ctx.save();
+    ctx.beginPath();
+    airfoilPts.forEach((z,i)=>{ const px=toPx(z); if(i===0) ctx.moveTo(px[0],px[1]); else ctx.lineTo(px[0],px[1]); });
+    ctx.closePath();
+    const grad=ctx.createLinearGradient(0, originY-60, 0, originY+60);
+    grad.addColorStop(0,'#EDEFF2'); grad.addColorStop(0.5,'#B9C0C8'); grad.addColorStop(1,'#7A828E');
+    ctx.fillStyle=grad; ctx.fill();
+    ctx.lineWidth=1.5; ctx.strokeStyle='#4A4E58'; ctx.stroke();
+    ctx.restore();
+  }
+  function drawFlowFrame(){
+    ctx.globalAlpha=1;
+    ctx.fillStyle='rgba(10,15,28,0.14)';
+    ctx.fillRect(0,0,W_,H_);
+    drawAirfoil();
+  }
+  ctx.fillStyle='#0A0F1C'; ctx.fillRect(0,0,W_,H_);
+
+  // ============================================================
+  // PART 2 — the efficiency game (simplified pedagogical model)
+  // ============================================================
+  const alpha0Deg = thetaTE*180/Math.PI;   // ≈ -4.68°, the "natural" (zero-extra-lift) angle
+  const GW = 183000, k1c = 1, k2c = 45;    // calibrated so the optimum sits mid-range
+
+  function liftOf(Uv, aDeg){ return Uv*Uv*(aDeg - alpha0Deg); }
+  function dragOf(Uv, aDeg){ return k1c*Uv*Uv + k2c*Math.pow(aDeg-alpha0Deg,2); }
+
+  const Ustar = Math.pow(2*k2c*GW*GW/k1c, 1/6);
+  const alphaEffStar = GW/(Ustar*Ustar);
+  const Dmin = k1c*Ustar*Ustar + k2c*alphaEffStar*alphaEffStar;
+
+  function efficiencyOf(Uv, aDeg){
+    const L = liftOf(Uv, aDeg);
+    if(L < GW) return {flying:false, eff:0};
+    const D = dragOf(Uv, aDeg);
+    const eff = Math.min(1, Dmin/D);
+    return {flying:true, eff};
+  }
+
+  // ============================================================
+  // PART 3 — exploration map
+  // ============================================================
+  const mapCanvas = document.getElementById('mapCanvas');
+  const mctx = mapCanvas.getContext('2d');
+  const MW = mapCanvas.width, MH = mapCanvas.height;
+  const marginL=46, marginR=16, marginT=14, marginB=34;
+  const plotW = MW - marginL - marginR, plotH = MH - marginT - marginB;
+  const UMIN=100, UMAX=1000, AMIN=-8, AMAX=18;
+  function mapX(u){ return marginL + (u-UMIN)/(UMAX-UMIN)*plotW; }
+  function mapY(a){ return marginT + (1-(a-AMIN)/(AMAX-AMIN))*plotH; }
+
+  let history = [];
+  let lastRecorded = null;
+
+  function effColor(flying, eff){
+    if(!flying) return '#526078';
+    if(eff>=0.85) return '#4ADE80';
+    if(eff>=0.55) return '#3FA7FF';
+    return '#FF5A4E';
+  }
+
+  function drawMap(){
+    mctx.fillStyle = '#0E1626';
+    mctx.fillRect(0,0,MW,MH);
+
+    // grid
+    mctx.strokeStyle = '#1B2740';
+    mctx.lineWidth = 1;
+    mctx.font = '11px Inter, sans-serif';
+    mctx.fillStyle = '#7C90B0';
+    for(let u=100; u<=1000; u+=200){
+      const x = mapX(u);
+      mctx.beginPath(); mctx.moveTo(x, marginT); mctx.lineTo(x, marginT+plotH); mctx.stroke();
+      mctx.fillText(u+'', x-14, MH-marginB+18);
+    }
+    for(let a=-5; a<=15; a+=5){
+      const y = mapY(a);
+      mctx.beginPath(); mctx.moveTo(marginL, y); mctx.lineTo(marginL+plotW, y); mctx.stroke();
+      mctx.fillText(a+'°', 6, y+4);
+    }
+    mctx.save();
+    mctx.translate(14, marginT+plotH/2);
+    mctx.rotate(-Math.PI/2);
+    mctx.fillText('ángulo', -18, 0);
+    mctx.restore();
+    mctx.fillText('velocidad (km/h)', marginL+plotW/2-32, MH-6);
+
+    // history points
+    for(const h of history){
+      mctx.globalAlpha = 0.75;
+      mctx.fillStyle = effColor(h.flying, h.eff);
+      mctx.beginPath();
+      mctx.arc(mapX(h.U), mapY(h.a), 4, 0, Math.PI*2);
+      mctx.fill();
+    }
+    mctx.globalAlpha = 1;
+
+    // current live marker
+    const cur = efficiencyOf(U*40, alphaDeg);
+    mctx.beginPath();
+    mctx.arc(mapX(UkmhGlobal), mapY(alphaDeg), 7, 0, Math.PI*2);
+    mctx.fillStyle = effColor(cur.flying, cur.eff);
+    mctx.fill();
+    mctx.lineWidth = 2;
+    mctx.strokeStyle = '#EAF2FF';
+    mctx.stroke();
+  }
+
+  function recordPoint(){
+    const Ureal = U*40;       // m/s, used for the physics
+    const Ukmh = UkmhGlobal;  // km/h, used for the map axis
+    const cur = efficiencyOf(Ureal, alphaDeg);
+    if(!lastRecorded || Math.abs(lastRecorded.U-Ukmh) > 15 || Math.abs(lastRecorded.a-alphaDeg) > 0.6){
+      history.push({U:Ukmh, a:alphaDeg, flying:cur.flying, eff:cur.eff});
+      if(history.length>500) history.shift();
+      lastRecorded = {U:Ukmh, a:alphaDeg};
+    }
+  }
+
+  // ============================================================
+  // PART 4 — UI wiring
+  // ============================================================
+  const velEl=document.getElementById('vel'), aoaEl=document.getElementById('aoa');
+  const velVal=document.getElementById('velVal'), aoaVal=document.getElementById('aoaVal');
+  const statusBadge=document.getElementById('statusBadge');
+  const gaugePct=document.getElementById('gaugePct'), gaugeFill=document.getElementById('gaugeFill');
+  const tempLabel=document.getElementById('tempLabel');
+  const solvedBanner=document.getElementById('solvedBanner');
+  const revealPanel=document.getElementById('revealPanel');
+  const revealBtn=document.getElementById('revealBtn');
+  const toggleReveal=document.getElementById('toggleReveal');
+
+  let solved = false;
+
+  function tempText(flying, eff){
+    if(!flying) return {text:'El ala no genera suficiente sustentación — se cae', color:'var(--hot)'};
+    if(eff>=0.97) return {text:'¡Caliente! Estás justo en el punto óptimo', color:'var(--good)'};
+    if(eff>=0.85) return {text:'Tibio — te estás acercando', color:'var(--cool)'};
+    if(eff>=0.55) return {text:'Frío — todavía gastas bastante combustible', color:'var(--text-lo)'};
+    return {text:'Helado — muy lejos de lo eficiente', color:'var(--hot)'};
+  }
+
+  function updateGame(){
+    const Ureal = U*40;
+    const res = efficiencyOf(Ureal, alphaDeg);
+
+    if(res.flying){
+      statusBadge.textContent = 'EN VUELO';
+      statusBadge.className = 'status-badge status-fly';
+      gaugePct.textContent = Math.round(res.eff*100) + '%';
+      gaugeFill.style.width = (res.eff*100) + '%';
+    } else {
+      statusBadge.textContent = 'SE CAE';
+      statusBadge.className = 'status-badge status-fall';
+      gaugePct.textContent = '—';
+      gaugeFill.style.width = '0%';
+    }
+    const t = tempText(res.flying, res.eff);
+    tempLabel.textContent = t.text;
+    tempLabel.style.color = t.color;
+
+    if(res.flying && res.eff>=0.97 && !solved){
+      solved = true;
+      solvedBanner.classList.add('show');
+    }
+  }
+
+  function updateFromControls(){
+    const vDisplayKmh=parseFloat(velEl.value);
+    velVal.textContent = vDisplayKmh.toFixed(0)+' km/h';
+    UkmhGlobal = vDisplayKmh;
+    const vDisplayMs = vDisplayKmh/3.6;
+    U = vDisplayMs/40;
+    alphaDeg = parseFloat(aoaEl.value);
+    aoaVal.textContent = alphaDeg.toFixed(1)+'°';
+    alpha = alphaDeg*Math.PI/180;
+    recomputeGamma();
+    updateGame();
+    recordPoint();
+  }
+  velEl.addEventListener('input', updateFromControls);
+  aoaEl.addEventListener('input', updateFromControls);
+  updateFromControls();
+
+  const advancedPanel=document.getElementById('advancedPanel');
+  const toggleAdvanced=document.getElementById('toggleAdvanced');
+
+  revealBtn.addEventListener('click', ()=>{ revealPanel.classList.add('show'); });
+  toggleReveal.addEventListener('click', ()=>{ revealPanel.classList.toggle('show'); });
+  toggleAdvanced.addEventListener('click', ()=>{ advancedPanel.classList.toggle('show'); });
+
+  function loop(){
+    drawFlowFrame();
+    stepFlow();
+    drawMap();
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>
+</body>
+</html>
