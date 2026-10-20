@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arregla la foto del Hubble</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#EEF2F6;--panel:#FFFFFF;--line:#E3E8EF;--ink:#1D2433;--muted:#6B778C;--accent:#FF5A36;--glow:rgba(255,90,54,0.30);--blue:#1E8FF0;--green:#16A34A;--amber:#F59E0B;--card:#F5F7FA;--scrim:rgba(30,40,60,0.28);}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Inter','Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;}
+  .game{display:grid;grid-template-columns:360px 1fr;height:100vh;min-height:620px;}
+  /* ---------- panel ---------- */
+  .side{position:relative;z-index:2;display:flex;flex-direction:column;gap:12px;padding:22px 22px 18px;background:var(--panel);border-right:1px solid var(--line);box-shadow:8px 0 30px rgba(20,30,50,0.06);overflow-y:auto;}
+  .kicker{font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:600;letter-spacing:0.16em;color:var(--accent);margin:0;}
+  .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;}
+  .seg button{border:none;background:transparent;border-radius:9px;padding:8px 4px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;line-height:1.2;}
+  .seg button small{display:block;font-size:10.5px;font-weight:500;opacity:0.85;}
+  .seg button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 4px rgba(20,30,50,0.12);} .seg button.on small{color:var(--accent);opacity:1;}
+  .seg button.ok::after{content:' ✓';color:var(--green);}
+  #mission h1{font-family:'Space Grotesk',sans-serif;font-size:24px;line-height:1.12;font-weight:700;margin:2px 0 6px;letter-spacing:-0.01em;}
+  #mission.done h1::after{content:' ✓';color:var(--green);}
+  .ins{font-size:14.5px;line-height:1.5;color:var(--muted);margin:0;} .ins b{color:var(--ink);}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 16px 8px;}
+  .stat .top{display:flex;justify-content:space-between;align-items:baseline;}
+  .stat .lbl{font-size:11.5px;font-weight:600;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;}
+  .stat .big{font-family:'Space Grotesk',sans-serif;font-size:38px;font-weight:700;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-0.02em;}
+  .stat .scale{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:-2px;}
+  .stat .note{font-size:12px;color:var(--muted);margin:6px 0 2px;line-height:1.45;} .stat .note b{color:var(--ink);}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:34px;background:transparent;cursor:pointer;}
+  input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(90deg,#C9DDF5,#1E8FF0 55%,#FF5A36);}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-9px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 2px 8px rgba(20,30,50,0.25);}
+  input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:linear-gradient(90deg,#C9DDF5,#1E8FF0 55%,#FF5A36);}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--accent);}
+  .sub{font-size:13.5px;line-height:1.5;color:var(--muted);min-height:20px;margin:0;} .sub b{color:var(--ink);}
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  button.b{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;border-radius:12px;padding:11px 12px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);transition:transform .08s, filter .15s, opacity .15s;}
+  button.b:hover:not(:disabled){filter:brightness(0.97);} button.b:active:not(:disabled){transform:translateY(1px);} button.b:disabled{opacity:0.38;cursor:not-allowed;}
+  button.primary{background:var(--accent);color:#fff;border-color:transparent;font-size:15.5px;padding:14px;box-shadow:0 6px 20px var(--glow);}
+  button.math{color:var(--blue);border-color:#BFDBFE;background:#F0F7FF;}
+  button.dark{background:#1D2433;color:#fff;border-color:transparent;}
+  .full{grid-column:1/-1;}
+  .spacer{flex:1;}
+  .foot{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px;}
+  .psf{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;}
+  .psf canvas{width:72px;height:72px;border-radius:10px;background:#000;flex:none;}
+  .psf p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45;} .psf b{color:var(--ink);}
+  .linkbtn{background:none;border:none;color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;padding:0;text-align:left;font-family:inherit;}
+  /* ---------- vista: la foto del telescopio como una pantalla ---------- */
+  .view{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;
+        background:radial-gradient(ellipse at 50% 18%, #FFFFFF 0%, #E3ECF6 60%, #D3E0EE 100%);}
+  .stage{position:relative;width:min(100%, calc(100vh - 130px));aspect-ratio:1/1;border-radius:20px;overflow:hidden;background:#000;
+         box-shadow:0 24px 60px rgba(20,40,80,0.30), 0 0 0 6px #fff, 0 0 0 7px var(--line);}
+  #img{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none;-webkit-user-select:none;user-select:none;}
+  .hud,.count{position:absolute;top:12px;font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:600;letter-spacing:0.06em;padding:6px 11px;border-radius:999px;pointer-events:none;backdrop-filter:blur(6px);}
+  .hud{left:12px;color:#E2E8F0;background:rgba(15,23,42,0.55);} .count{right:12px;color:#fff;background:var(--accent);box-shadow:0 4px 14px var(--glow);}
+  .views{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:min(100%, calc(100vh - 130px));background:#fff;border:1px solid var(--line);border-radius:12px;padding:4px;box-shadow:0 6px 18px rgba(20,40,80,0.08);}
+  .views button{border:none;background:transparent;border-radius:9px;padding:8px 4px;font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;}
+  .views button.on{background:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(30,143,240,0.35);} .views button:disabled{opacity:0.35;cursor:not-allowed;}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;font-size:12px;color:var(--muted);}
+  .legend .ok{color:var(--green);} .legend .warn{color:#B45309;} .legend .bad{color:#DC2626;}
+  .loupe{position:absolute;width:140px;height:140px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 2px var(--accent), 0 10px 30px rgba(0,0,0,0.5);overflow:hidden;pointer-events:none;display:none;z-index:5;background:#000;}
+  .loupe canvas{width:100%;height:100%;display:block;}
+  .loupe span{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px #000;}
+  /* ---------- ventanas emergentes ---------- */
+  .modal{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .3s;padding:12px;}
+  .modal.show{opacity:1;pointer-events:auto;}
+  .res{width:min(440px,100%);max-height:100%;overflow:auto;background:var(--panel);border-radius:22px;padding:24px 24px 18px;box-shadow:0 30px 80px rgba(20,30,50,0.3);transform:translateY(14px) scale(0.98);transition:transform .3s;text-align:center;}
+  .modal.show .res{transform:none;}
+  .res .big{font-family:'Space Grotesk',sans-serif;font-size:23px;font-weight:700;margin:0 0 8px;line-height:1.2;}
+  .res p{margin:0 0 14px;color:var(--muted);font-size:14.5px;line-height:1.55;} .res p b{color:var(--ink);}
+  .res .ok{color:var(--green);} .res .bad{color:#DC2626;} .res .warn{color:#B45309;}
+  .res .btns{margin-top:6px;}
+  .res .linkbtn{display:block;margin:12px auto 0;text-align:center;color:var(--muted);font-weight:500;text-decoration:underline;}
+  .explain .res{text-align:left;width:min(640px,100%);}
+  .explain h3{font-family:'Space Grotesk',sans-serif;font-size:17px;margin:18px 0 6px;color:var(--ink);} .explain h3:first-child{margin-top:0;}
+  .explain p{font-size:14.5px;} .explain code{background:var(--card);padding:1px 6px;border-radius:5px;color:var(--ink);font-size:13px;}
+  .explain .adv{display:none;border-top:1px dashed var(--line);margin-top:6px;padding-top:6px;} .explain .adv.show{display:block;}
+  .explain{z-index:30;}
+  .explain .eq{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px;overflow-x:auto;color:var(--ink);}
+  .explain math{font-size:1.3em;font-family:"STIX Two Math","Cambria Math","Latin Modern Math",math;} .explain .eq math{margin:0;}
+  .explain .pixdiag{--c:22px;display:flex;align-items:center;justify-content:center;gap:18px;margin:4px 0 16px;}
+  .explain .pixdiag figure{margin:0;text-align:center;}
+  .explain .pixdiag figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.35;}
+  .explain .px{display:grid;grid-template-columns:repeat(7,var(--c));grid-template-rows:repeat(7,var(--c));gap:1px;background:#B9C4D4;border:1px solid #B9C4D4;border-radius:4px;overflow:hidden;}
+  .explain .px span{background:#EEF2F7;border-radius:2px;display:flex;align-items:center;justify-content:center;}
+  .explain .px .lit{background:#F59E0B;} .explain .px .part{background:#FCD9A0;}
+  .explain .px i{width:6px;height:6px;border-radius:50%;background:#1D2433;}
+  .explain .pixdiag .arr{font-size:26px;color:var(--muted);}
+  .explain .eq.one{overflow:hidden;}
+  .explain ul.terms,.explain ol.steps{margin:0 0 14px;padding-left:20px;color:var(--muted);font-size:14.5px;line-height:1.55;} .explain li{margin-bottom:4px;} .explain li b{color:var(--ink);}
+  /* resultado: tarjeta compacta sobre el panel (abajo en el celular) que deja ver la foto */
+  #result{background:none;pointer-events:none;justify-content:flex-start;padding:16px 12px;}
+  #result.show .res{pointer-events:auto;}
+  #result .res{position:relative;width:336px;padding:20px 18px 14px;box-shadow:0 24px 60px rgba(20,30,50,0.28), 0 0 0 1px var(--line);}
+  #result .big{font-size:21px;padding:0 22px;} #result p{font-size:14px;margin-bottom:12px;}
+  #result .btns{gap:7px;} #result button.b{padding:10px 8px;font-size:13.5px;} #result button.primary{font-size:15px;padding:13px;}
+  .res .sol{color:var(--blue);}
+  .xbtn{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:none;background:var(--card);color:var(--muted);font-size:18px;line-height:1;cursor:pointer;}
+  .xbtn:hover{color:var(--ink);}
+  /* ---------- portada: la historia ---------- */
+  .intro{position:fixed;inset:0;z-index:50;background:#05070F;color:#E8EEF8;display:flex;align-items:center;justify-content:center;padding:24px 18px;overflow:hidden;transition:opacity .7s;}
+  .intro.gone{opacity:0;pointer-events:none;}
+  .intro #sky{position:absolute;inset:0;width:100%;height:100%;}
+  .intro .tile{position:absolute;width:clamp(120px,19vw,230px);aspect-ratio:1/1;padding:7px 7px 26px;background:#F4F1EA;border-radius:4px;box-shadow:0 18px 40px rgba(0,0,0,0.6);opacity:0;transition:opacity 1.6s;}
+  .intro .tile.on{opacity:0.72;}
+  .intro .tile canvas{width:100%;height:100%;display:block;background:#000;}
+  .intro .tile span{position:absolute;left:0;right:0;bottom:6px;text-align:center;font:500 10.5px 'IBM Plex Mono',ui-monospace,monospace;color:#5B5547;letter-spacing:0.04em;}
+  .intro .t1{left:5%;top:9%;transform:rotate(-7deg);} .intro .t2{right:6%;top:13%;transform:rotate(5deg);} .intro .t3{left:9%;bottom:8%;transform:rotate(4deg);} .intro .t4{right:8%;bottom:10%;transform:rotate(-5deg);}
+  .intro .card{position:relative;max-width:620px;text-align:center;padding:30px 28px 26px;border-radius:26px;background:radial-gradient(ellipse at center, rgba(5,7,15,0.88) 0%, rgba(5,7,15,0.72) 60%, rgba(5,7,15,0) 100%);}
+  .intro .kicker{color:#FFB020;margin-bottom:14px;}
+  .intro h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,5vw,46px);line-height:1.05;margin:0 0 18px;letter-spacing:-0.02em;font-weight:700;}
+  .intro h2 em{font-style:normal;color:#FF5A36;filter:blur(1.2px);}
+  .intro p{font-size:clamp(15px,1.9vw,18px);line-height:1.65;color:#B9C4D6;margin:0 0 26px;}
+  .intro p b{color:#fff;}
+  .intro .line{opacity:0;transform:translateY(8px);transition:opacity .9s, transform .9s;display:inline;}
+  .intro .line.on{opacity:1;transform:none;}
+  .intro .go{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;border:none;border-radius:999px;padding:16px 46px;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 10px 34px rgba(255,90,54,0.5);opacity:0;transform:scale(0.94);transition:opacity .8s, transform .8s, filter .15s;}
+  .intro .go.on{opacity:1;transform:none;} .intro .go:hover{filter:brightness(1.08);}
+  .intro .skip{position:absolute;bottom:16px;right:18px;background:none;border:none;color:#6B778C;font-size:13px;cursor:pointer;font-family:inherit;}
+  .shake{animation:shake .35s;} @keyframes shake{25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+  /* ---------- celular: la foto arriba y, debajo, primero lo que se usa al jugar ---------- */
+  @media (max-width:860px){
+    html,body{overflow:visible;height:auto;} html{overflow-y:auto;}
+    .game{grid-template-columns:1fr;height:auto;min-height:0;}
+    .view{order:1;padding:12px 12px 10px;justify-content:flex-start;}
+    .stage{width:100%;border-radius:16px;box-shadow:0 14px 34px rgba(20,40,80,0.28), 0 0 0 4px #fff;}
+    .views{width:100%;}
+    .side{order:2;padding:12px 14px 20px;gap:10px;border-right:none;border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(20,30,50,0.06);overflow:visible;}
+    #mission{order:1;} #mission h1{font-size:19px;margin:0 0 2px;} .ins{font-size:13.5px;}
+    .stat{order:2;padding:8px 14px 6px;} .stat .big{font-size:30px;}
+    .play{order:3;} .sub{order:4;min-height:0;}
+    .kicker{order:5;margin-top:6px;} .seg{order:6;} .spacer{display:none;} .foot{order:7;}
+    button.b{min-height:46px;}
+    #result{justify-content:center;align-items:flex-end;padding:0;}
+    #result .res{width:100%;max-height:62vh;border-radius:22px 22px 0 0;padding:18px 16px calc(12px + env(safe-area-inset-bottom));transform:translateY(40px);}
+    #result.show .res{transform:none;}
+    #result button.b{min-height:44px;}
+    .intro .tile{width:30vw;} .intro .t1{left:-3%;top:4%;} .intro .t2{right:-3%;top:6%;} .intro .t3{left:-2%;bottom:3%;} .intro .t4{right:-3%;bottom:5%;}
+    .intro .card{padding:22px 14px;}
+    .explain .eq{padding:8px 6px;} .explain .eq math{font-size:0.92em;}
+    .explain .pixdiag{--c:15px;gap:10px;}
+  }
+</style>
+</head>
+<body>
+<div class="game">
+  <aside class="side">
+    <p class="kicker">ARREGLA LA FOTO DEL HUBBLE</p>
+    <div class="seg">
+      <button class="lvl">Etapa 1<small>una estrella</small></button>
+      <button class="lvl">Etapa 2<small>cuenta estrellas</small></button>
+      <button class="lvl">Etapa 3<small>planeta escondido</small></button>
+    </div>
+    <div id="mission"><h1 id="mTitle"></h1><p class="ins" id="mText"></p></div>
+    <div class="stat" id="sharpBox">
+      <div class="top"><span class="lbl">Nitidez</span><span class="big" id="sharpVal">0</span></div>
+      <input type="range" id="sharp" min="0" max="100" step="1" value="0" aria-label="Nitidez">
+      <div class="scale"><span>borrosa</span><span>más nítida →</span></div>
+    </div>
+    <div class="btns play">
+      <button class="b primary full" id="sendBtn">📡 Enviar a la NASA</button>
+      <button class="b" id="undoBtn">↶ Borrar la última</button>
+      <button class="b" id="clearBtn">Borrar todas</button>
+    </div>
+    <p class="sub" id="mState"></p>
+    <div class="spacer"></div>
+    <div class="foot">
+      <div class="btns"><button class="b" id="hintBtn">💡 Pista</button><button class="b math" id="solBtn">Ver solución</button></div>
+      <button class="b dark" id="newBtn">🔭 Nueva foto</button>
+      <div class="psf"><canvas id="psfCv" width="96" height="96"></canvas><p id="psfTxt"></p></div>
+      <button class="linkbtn" id="revT">📐 La matemática: ¿cómo se arregla una foto borrosa?</button>
+      <button class="linkbtn" id="storyT">🎬 Ver de nuevo la historia</button>
+    </div>
+  </aside>
+  <main class="view">
+    <div class="stage">
+      <canvas id="img" width="512" height="512" aria-label="Imagen del telescopio. Toca o haz clic para marcar."></canvas>
+      <span class="hud" id="hud">TU FOTO RESTAURADA</span>
+      <span class="count" id="count"></span>
+      <div class="loupe" id="loupe"><canvas id="loupeCv" width="280" height="280"></canvas><span id="loupeTxt"></span></div>
+    </div>
+    <div class="views">
+      <button id="vObs">Original</button>
+      <button id="vRes" class="on">Restaurada</button>
+      <button id="vTrue" disabled>Corregida (1993)</button>
+    </div>
+    <div class="legend" id="legend" style="display:none"></div>
+  </main>
+</div>
+
+<div class="intro" id="intro">
+  <canvas id="sky"></canvas>
+  <div class="tile t1"><canvas width="256" height="256"></canvas><span>WF/PC · 1990</span></div>
+  <div class="tile t2"><canvas width="256" height="256"></canvas><span>FOC · 1990</span></div>
+  <div class="tile t3"><canvas width="256" height="256"></canvas><span>WF/PC · 1991</span></div>
+  <div class="tile t4"><canvas width="256" height="256"></canvas><span>FOC · 1992</span></div>
+  <div class="card">
+    <p class="kicker">ARREGLA LA FOTO DEL HUBBLE</p>
+    <h2>Las fotos más caras del mundo salieron <em>borrosas</em></h2>
+    <p><span class="line"><b>Abril de 1990.</b> El telescopio espacial Hubble, una de las máquinas más caras jamás construidas, envió sus primeras fotos… y salieron <b>borrosas</b>. </span><span class="line">Su espejo de 2,4 m estaba pulido con un error de 2,2 milésimas de milímetro, unas 50 veces más fino que un cabello. </span><span class="line">Faltaban más de tres años para repararlo. </span><span class="line">Mientras tanto, la única forma de rescatar la ciencia era <b>con matemática</b>.</span></p>
+    <button class="go" id="playBtn">▶ Jugar</button>
+  </div>
+  <button class="skip" id="skipBtn">Saltar historia</button>
+</div>
+
+<div class="modal" id="result"><div class="res"><button class="xbtn" id="rClose" aria-label="Cerrar y mirar la foto">×</button><div id="rBody"></div></div></div>
+
+<div class="modal explain" id="explain">
+  <div class="res">
+    <h3>La matemática de una foto borrosa</h3>
+    <p>Una foto digital es una cuadrícula de <b>píxeles</b>. Como el espejo estaba mal pulido, la luz que debía caer en un píxel se repartió entre sus vecinos. Por simplicidad, supongamos que la luz del píxel ● se repartió de forma uniforme entre él y sus cuatro vecinos:</p>
+    <div class="pixdiag" aria-label="Con el espejo bien pulido la luz cae en un solo píxel; mal pulido, se reparte en partes iguales entre ese píxel y sus cuatro vecinos.">
+      <figure><div class="px"><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class="lit"><i></i></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span></div><figcaption>Espejo bien pulido<br>I<sub>nítida</sub></figcaption></figure>
+      <span class="arr">→</span>
+      <figure><div class="px"><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class="part"></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class="part"></span><span class="part"><i></i></span><span class="part"></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class="part"></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span><span class=""></span></div><figcaption>Espejo mal pulido<br>I<sub>borrosa</sub></figcaption></figure>
+    </div>
+    <p>Entonces, el brillo borroso <b>I<sub>borrosa</sub></b> que registra el Hubble en un píxel es el <b>promedio</b> de los brillos <b>I<sub>nítida</sub></b> que debió registrar en ese píxel y sus vecinos (↑ ↓ ← →), más el ruido propio de la cámara, <b>r</b>:</p>
+    <div class="eq one"><math display="block" displaystyle="true"><mrow><msub><mi>I</mi><mtext>borrosa</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal" style="font-size:0.55em">●</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mn>1</mn><mn>5</mn></mfrac><mo stretchy="false">[</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal" style="font-size:0.55em">●</mi><mo stretchy="false">)</mo><mo>+</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal">↑</mi><mo stretchy="false">)</mo><mo>+</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal">↓</mi><mo stretchy="false">)</mo><mo>+</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal">←</mi><mo stretchy="false">)</mo><mo>+</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal">→</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo><mo>+</mo><mi>r</mi><mo stretchy="false">(</mo><mi mathvariant="normal" style="font-size:0.55em">●</mi><mo stretchy="false">)</mo></mrow></math></div>
+    <div class="eq alt" hidden><math display="block" displaystyle="true"><mtable columnalign="right left" rowspacing="0.6em"><mtr><mtd><msub><mi>I</mi><mtext>borrosa</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal" style="font-size:0.55em">●</mi><mo stretchy="false">)</mo><mo>=</mo></mtd><mtd><mstyle displaystyle="true"><mfrac><mn>1</mn><mn>5</mn></mfrac></mstyle><mo stretchy="false">[</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal" style="font-size:0.55em">●</mi><mo stretchy="false">)</mo><mo>+</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal">↑</mi><mo stretchy="false">)</mo><mo>+</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal">↓</mi><mo stretchy="false">)</mo></mtd></mtr><mtr><mtd></mtd><mtd><mo>+</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal">←</mi><mo stretchy="false">)</mo><mo>+</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi mathvariant="normal">→</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo><mo>+</mo><mi>r</mi><mo stretchy="false">(</mo><mi mathvariant="normal" style="font-size:0.55em">●</mi><mo stretchy="false">)</mo></mtd></mtr></mtable></math></div>
+    <h3>Un problema inverso</h3>
+    <p>La información que tenemos es la imagen borrosa <b>I<sub>borrosa</sub></b>, y la información que queremos es la imagen nítida <b>I<sub>nítida</sub></b>: hay que ir del efecto a la causa. Eso es un <b>problema inverso</b>.</p>
+    <p>Deshacer el promedio exige amplificar las diferencias entre píxeles vecinos, y el ruido se amplifica con ellas. Un error pequeño en I<sub>borrosa</sub> produce un error grande en I<sub>nítida</sub>, por eso se dice que el problema está <b>mal condicionado</b>.</p>
+    <p>Para resolverlo se elige un número, <b>λ</b>, que decide cuánto amplificar. Con λ grande la imagen queda borrosa; con λ chico aparecen puntos brillantes donde no hay nada. El λ adecuado no se puede calcular de antemano: hay que <b>probar, mirar el resultado y ajustar</b>. Así ocurre en casi todos los problemas inversos. <b>Eso es lo que controlaba tu perilla de nitidez: la perilla es λ.</b></p>
+    <p><button class="linkbtn" id="advT">➕ Para saber más: convolución y filtro de Wiener</button></p>
+    <div class="adv" id="adv">
+      <p>Una foto real tiene <b>millones de píxeles</b> (la cámara principal del Hubble en 1990 tenía unos 2,5 millones). Además, la luz no se reparte solo entre los vecinos inmediatos sino entre miles de píxeles, y no en partes iguales: los más cercanos reciben más. Si llamamos <b>M</b> a la forma de esa mancha, cada píxel de la foto es una suma con pesos de toda la vecindad. Recuperar la imagen nítida significa resolver <b>millones de ecuaciones como esta, con millones de incógnitas</b>:</p>
+      <div class="eq one"><math display="block" displaystyle="true"><mrow><msub><mi>I</mi><mtext>borrosa</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo><mo>=</mo><munder><mo largeop="true" movablelimits="false" stretchy="false" style="font-size:1.6em">∑</mo><mrow><mi>i</mi><mo>,</mo><mi>j</mi></mrow></munder><mi>M</mi><mo stretchy="false">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="false">)</mo><mo>⁢</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo>−</mo><mi>i</mi><mo>,</mo><mi>y</mi><mo>−</mo><mi>j</mi><mo stretchy="false">)</mo><mo>+</mo><mi>r</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo></mrow></math></div>
+      <p>Esta operación se llama <b>convolución</b> y se denota por <span style="font-size:1.35em;line-height:1;vertical-align:-0.15em">∗</span>. De esta forma, la relación entre la imagen nítida y la borrosa se representa por:</p>
+      <div class="eq"><math display="block" displaystyle="true"><mrow><msub><mi>I</mi><mtext>borrosa</mtext></msub><mo>=</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo>∗</mo><mi>M</mi><mo>+</mo><mi>r</mi></mrow></math></div>
+      <p>La convolución es una manera de combinar dos funciones a través de un <b>promedio móvil</b>. En el caso del Hubble, se combina la imagen nítida con la mancha.</p>
+      <p>Usando la transformada de Fourier y el filtro de Wiener, se obtiene una fórmula para estimar la imagen nítida:</p>
+      <div class="eq one"><math display="block" displaystyle="true"><mrow><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo><mo>≈</mo><mfrac><mn>1</mn><msup><mi>N</mi><mn>2</mn></msup></mfrac><munderover><mo largeop="true" movablelimits="false" stretchy="false" style="font-size:1.4em">∑</mo><mrow><mi>u</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></munderover><munderover><mo largeop="true" movablelimits="false" stretchy="false" style="font-size:1.4em">∑</mo><mrow><mi>v</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></munderover><mfrac><mrow><mover accent="true"><mi>M</mi><mo>^</mo></mover><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false">)</mo><mo>⁢</mo><msub><mover accent="true"><mi>I</mi><mo>^</mo></mover><mtext>borrosa</mtext></msub><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false">)</mo></mrow><mrow><msup><mrow><mo stretchy="false">[</mo><mover accent="true"><mi>M</mi><mo>^</mo></mover><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo></mrow><mn>2</mn></msup><mo>+</mo><mi>λ</mi></mrow></mfrac><mo>⁢</mo><msup><mi>e</mi><mrow><mn>2</mn><mi>π</mi><mi>i</mi><mo stretchy="false">(</mo><mi>u</mi><mi>x</mi><mo>+</mo><mi>v</mi><mi>y</mi><mo stretchy="false">)</mo><mo>/</mo><mi>N</mi></mrow></msup></mrow></math></div>
+      <p>Aquí <i>M̂</i> e <i>Î</i><sub>borrosa</sub> son las <b>transformadas de Fourier</b> de la mancha y de la foto. La transformada de Fourier descompone una función, en este caso una imagen, en una suma de ondas de distintas frecuencias. <i>N</i> es el número de píxeles por lado y <b>λ</b> es la perilla de nitidez.</p>
+      <p><b>Simplificaciones.</b> El juego usa imágenes simuladas, una mancha simplificada y un planeta mucho más brillante.</p>
+    </div>
+    <div class="btns" style="grid-template-columns:1fr;margin-top:10px"><button class="b primary" id="explainClose">Volver al juego</button></div>
+  </div>
+</div>
+
+<script>
+
+(function(){
+const $ = id => document.getElementById(id);
+const N = 256;   // tamaño de la imagen (potencia de 2 para la FFT)
+
+// ---------------- FFT 2D (radix-2, en el lugar) ----------------
+function fft1(re, im, inv){
+  const n = re.length;
+  for (let i=1, j=0; i<n; i++){ let bit = n>>1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit;
+    if (i < j){ let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+  for (let len=2; len<=n; len<<=1){
+    const ang = 2*Math.PI/len*(inv?1:-1), wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i=0; i<n; i+=len){ let cr = 1, ci = 0;
+      for (let k=0; k<len/2; k++){ const a = i+k, b = a+len/2;
+        const xr = re[b]*cr - im[b]*ci, xi = re[b]*ci + im[b]*cr;
+        re[b] = re[a]-xr; im[b] = im[a]-xi; re[a] += xr; im[a] += xi;
+        const t = cr*wr - ci*wi; ci = cr*wi + ci*wr; cr = t; } } }
+  if (inv){ for (let i=0;i<n;i++){ re[i] /= n; im[i] /= n; } }
+}
+function fft2(re, im, inv){
+  const r = new Float64Array(N), m = new Float64Array(N);
+  for (let y=0;y<N;y++){ const o = y*N; for (let x=0;x<N;x++){ r[x]=re[o+x]; m[x]=im[o+x]; } fft1(r,m,inv); for (let x=0;x<N;x++){ re[o+x]=r[x]; im[o+x]=m[x]; } }
+  for (let x=0;x<N;x++){ for (let y=0;y<N;y++){ r[y]=re[y*N+x]; m[y]=im[y*N+x]; } fft1(r,m,inv); for (let y=0;y<N;y++){ re[y*N+x]=r[y]; im[y*N+x]=m[y]; } }
+}
+function rng(seed){ return ()=>{ seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed>>>15, 1|seed); t = t + Math.imul(t ^ t>>>7, 61|t) ^ t; return ((t ^ t>>>14)>>>0)/4294967296; }; }
+function gauss(r){ let u=0,v=0; while(!u) u=r(); while(!v) v=r(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+// ---------------- la mancha del espejo de 1990 (PSF), con el tamaño del halo como parámetro ----------------
+// núcleo (≈15 % de la luz) + halo ancho con borde más brillante (≈85 %): modelo simplificado de la aberración esférica
+const CORE = 0.15;
+function makePSF(R){
+  const p = new Float64Array(N*N), c = new Float64Array(N*N), h = new Float64Array(N*N); let sc = 0, sh = 0;
+  for (let y=0;y<N;y++) for (let x=0;x<N;x++){
+    const dx = x < N/2 ? x : x-N, dy = y < N/2 ? y : y-N, r = Math.hypot(dx, dy), i = y*N+x;
+    c[i] = Math.exp(-(r*r)/(2*2.1*2.1));
+    const disk = r < R ? 1 : Math.exp(-((r-R)**2)/(2*0.9*0.9)), ring = Math.exp(-((r-(R-1))**2)/(2*1.2*1.2));
+    h[i] = 0.55*disk + 0.45*ring; sc += c[i]; sh += h[i];
+  }
+  for (let i=0;i<N*N;i++) p[i] = CORE*c[i]/sc + (1-CORE)*h[i]/sh;
+  const re = p.slice(), im = new Float64Array(N*N); fft2(re, im, false);
+  const H2 = new Float64Array(N*N); for (let i=0;i<N*N;i++) H2[i] = re[i]*re[i] + im[i]*im[i];
+  return {p, re, im, H2, R};
+}
+const PSF_CACHE = new Map();
+const psfOf = R => { const k = R.toFixed(1); if (!PSF_CACHE.has(k)) PSF_CACHE.set(k, makePSF(R)); return PSF_CACHE.get(k); };
+
+// ---------------- etapas ----------------
+const STAGES = [
+  {t:'Etapa 1 · Una estrella', p:'Sube la nitidez hasta que la estrella quede como un <b>punto limpio</b>, y márcala.',
+   hint:'💡 Mira cómo el halo se junta en un punto al subir la nitidez. Si empiezan a aparecer <b>puntitos alrededor</b>, te pasaste: es ruido amplificado.'},
+  {t:'Etapa 2 · Cuenta las estrellas', p:'Ajusta la nitidez y marca cada estrella. <b>No inventes ninguna.</b>',
+   hint:'💡 Sube la nitidez poco a poco. Si ves <b>polvo de puntitos</b> por todas partes, te pasaste: es ruido amplificado. Si una mancha se ve "alargada", quizá son <b>dos estrellas</b>.'},
+  {t:'Etapa 3 · El planeta escondido', p:'Junto a la estrella brillante se esconde un planeta débil. Márcalo: tienes <b>3 intentos</b>.',
+   hint:'💡 El planeta está dentro del halo de la estrella, muy cerca. Refina la foto lo justo: los anillos que deja la estrella y el ruido pueden engañarte.'}
+];
+const MARKING = st => st < 2;   // etapas 1 y 2: marcas libres que se pueden mover
+let S = 0, scene = null, view = 'res', marks = [], scored = false, tries = 0;
+const solved = [false,false,false];
+let seedCounter = (Date.now() % 100000) | 0;
+
+function starBlob(arr, s, sig=0.6){
+  for (let y=Math.floor(s.y-4); y<=Math.ceil(s.y+4); y++) for (let x=Math.floor(s.x-4); x<=Math.ceil(s.x+4); x++){
+    if (x<0||y<0||x>=N||y>=N) continue;
+    arr[y*N+x] += s.f/(2*Math.PI*sig*sig)*Math.exp(-((x-s.x)**2+(y-s.y)**2)/(2*sig*sig));
+  }
+}
+function blurAndNoise(truth, P, noise, r){
+  const Fre = truth.slice(), Fim = new Float64Array(N*N); fft2(Fre, Fim, false);
+  const Gre = new Float64Array(N*N), Gim = new Float64Array(N*N);
+  for (let i=0;i<N*N;i++){ Gre[i] = Fre[i]*P.re[i] - Fim[i]*P.im[i]; Gim[i] = Fre[i]*P.im[i] + Fim[i]*P.re[i]; }
+  const obs = Gre.slice(), tmp = Gim.slice(); fft2(obs, tmp, true);
+  for (let i=0;i<N*N;i++) obs[i] += noise*gauss(r);
+  const Ore = obs.slice(), Oim = new Float64Array(N*N); fft2(Ore, Oim, false);
+  // "con el espejo corregido": la verdad vista con una mancha estrecha
+  const fixed = new Float64Array(N*N), fr = truth.slice(), fi = new Float64Array(N*N); fft2(fr, fi, false);
+  for (let y=0;y<N;y++) for (let x=0;x<N;x++){ const u = (x<N/2?x:x-N)/N, v = (y<N/2?y:y-N)/N, g = Math.exp(-2*Math.PI*Math.PI*1.21*(u*u+v*v)); fr[y*N+x] *= g; fi[y*N+x] *= g; }
+  fft2(fr, fi, true); for (let i=0;i<N*N;i++) fixed[i] = fr[i] + 0.25*noise*gauss(r);
+  return {obs, Ore, Oim, fixed};
+}
+function makeScene(stage, seed){
+  const r = rng(seed), stars = [], truth = new Float64Array(N*N);
+  const far = (x,y,d) => stars.every(s => Math.hypot(s.x-x, s.y-y) > d);
+  const M = 22; let guard = 0;
+  let R = 11, noise = 0.0012, extra = {};
+  if (stage===0){
+    stars.push({x:70 + r()*116, y:70 + r()*116, f:1.5 + r()*0.5});   // una sola estrella, para aprender
+  } else if (stage===1){
+    while (stars.length < 6 && guard++ < 5000){   // 3 estrellas dobles separadas 4–5,5 px
+      const x = M + r()*(N-2*M), y = M + r()*(N-2*M), a = r()*Math.PI, d = 4 + r()*1.5, x2 = x + d*Math.cos(a), y2 = y + d*Math.sin(a);
+      if (far(x,y,26) && far(x2,y2,26)){ const f = 1.2 + r()*1.0; stars.push({x,y,f,pair:true}); stars.push({x:x2,y:y2,f:f*(0.75+0.25*r()),pair:true}); }
+    }
+    guard = 0; const total = 13 + Math.floor(r()*5);
+    while (stars.length < total && guard++ < 5000){ const x = M + r()*(N-2*M), y = M + r()*(N-2*M); if (far(x,y,26)) stars.push({x,y,f:1.2 + r()*1.0, pair:false}); }
+  } else {
+    const cx = N/2 + (r()-0.5)*40, cy = N/2 + (r()-0.5)*40, a = r()*2*Math.PI, d = 9 + r()*4;
+    stars.push({x:cx, y:cy, f:12, host:true});
+    stars.push({x:cx + d*Math.cos(a), y:cy + d*Math.sin(a), f:1.3 + r()*0.3, planet:true});
+    while (stars.length < 7 && guard++ < 5000){ const x = M + r()*(N-2*M), y = M + r()*(N-2*M); if (far(x,y,45)) stars.push({x,y,f:0.9 + r()*1.0}); }
+    noise = 0.0012;
+  }
+  for (const s of stars) starBlob(truth, s);
+  const P = psfOf(R), B = blurAndNoise(truth, P, noise, r);
+  const peak = Math.max(...stars.filter(s=>!s.host).map(s=>s.f))/(2*Math.PI*0.36);
+  return Object.assign({stage, stars, truth, R, noise, peak, seed}, B);
+}
+// restauración con el filtro de Wiener / Tikhonov:  F = conj(H)·G / (|H|² + λ),  usando la mancha que el jugador cree (etapa 2)
+const lambdaOf = s => Math.pow(10, -0.6 - 4.6*s/100);
+function restore(s, R){
+  if (s <= 0) return scene.obs;
+  const P = psfOf(R ?? scene.R), lam = lambdaOf(s), re = new Float64Array(N*N), im = new Float64Array(N*N);
+  for (let i=0;i<N*N;i++){
+    const gr = scene.Ore[i], gi = scene.Oim[i], hr = P.re[i], hi = -P.im[i], d = P.H2[i] + lam;
+    re[i] = (hr*gr - hi*gi)/d; im[i] = (hr*gi + hi*gr)/d;
+  }
+  fft2(re, im, true); return re;
+}
+
+// ---------------- dibujo ----------------
+const cv = $('img'), cx = cv.getContext('2d'), buf = document.createElement('canvas'); buf.width = buf.height = N;
+const bctx = buf.getContext('2d'), imgData = bctx.createImageData(N, N);
+function colormap(t){   // positivos: negro → azul profundo → blanco → ámbar · negativos (luz quitada de más): rojo
+  if (t < 0){ const k = Math.min(1, Math.max(0, -t*1.5 - 0.08)); return [200*k, 30*k, 30*k]; }   // el ruido muy débil queda negro
+  t = Math.min(1, t);
+  const stops = [[0,[0,0,0]],[0.25,[18,40,90]],[0.55,[90,150,230]],[0.8,[235,242,255]],[1,[255,214,140]]];
+  for (let i=1;i<stops.length;i++) if (t <= stops[i][0]){ const [a,ca] = stops[i-1], [b,cb] = stops[i], k = (t-a)/(b-a); return ca.map((c,j)=>c+(cb[j]-c)*k); }
+  return stops[stops.length-1][1];
+}
+let current = null;
+function render(){
+  const arr = view==='obs' ? scene.obs : view==='true' ? scene.fixed : current;
+  const s = scene.peak*0.015, top = Math.asinh(scene.peak*0.3/s);
+  for (let i=0;i<N*N;i++){
+    const v = arr[i], t = Math.sign(v)*Math.asinh(Math.abs(v)/s)/top, c = colormap(t);
+    imgData.data[i*4]=c[0]; imgData.data[i*4+1]=c[1]; imgData.data[i*4+2]=c[2]; imgData.data[i*4+3]=255;
+  }
+  bctx.putImageData(imgData, 0, 0);
+  const W = cv.width, k = W/N;
+  cx.imageSmoothingEnabled = true; cx.drawImage(buf, 0, 0, W, W);
+  cx.lineWidth = 2*Math.max(1, W/512);
+  for (const m of marks){
+    let col = '#FFB020'; if (scored || m.judged) col = m.hit ? '#4ADE80' : '#FF5A4E'; else if (drag && drag.m === m) col = '#FFFFFF';
+    cx.strokeStyle = col; cx.beginPath();
+    if ((scored || m.judged) && !m.hit){ const r = 6*Math.max(1,W/512); cx.moveTo(m.x*k-r, m.y*k-r); cx.lineTo(m.x*k+r, m.y*k+r); cx.moveTo(m.x*k+r, m.y*k-r); cx.lineTo(m.x*k-r, m.y*k+r); }
+    else cx.arc(m.x*k, m.y*k, Math.max(2.6*k, 5*Math.max(1,W/512)), 0, 6.283);
+    cx.stroke();
+  }
+  if (scored){ cx.strokeStyle = '#FFB020'; cx.setLineDash([3,3]); for (const s of scene.stars) if (s.miss){ cx.beginPath(); cx.arc(s.x*k, s.y*k, 9*Math.max(1,W/512), 0, 6.283); cx.stroke(); } cx.setLineDash([]); }
+  if (press) drawLoupe();
+  $('count').textContent = MARKING(scene.stage) ? marks.length + (marks.length===1 ? ' marcada' : ' marcadas') : `intentos: ${3-tries} de 3`;
+  $('hud').textContent = view==='obs' ? 'FOTO ORIGINAL DEL HUBBLE · 1990' : view==='true' ? 'CON EL ESPEJO CORREGIDO · 1993' : 'TU FOTO RESTAURADA';
+}
+function fitCanvas(){ const w = cv.getBoundingClientRect().width; if (!w) return; const d = Math.min(2, devicePixelRatio||1); const px = Math.round(w*d); if (cv.width!==px){ cv.width = cv.height = px; } render(); }
+new ResizeObserver(fitCanvas).observe(cv);
+function drawPSFThumb(R){
+  const P = psfOf(R), pc = $('psfCv'), p = pc.getContext('2d'), im = p.createImageData(96,96), mx = P.p[0];
+  for (let y=0;y<96;y++) for (let x=0;x<96;x++){ const dx = Math.round((x-48)/2.6), dy = Math.round((y-48)/2.6);
+    const v = P.p[((dy+N)%N)*N + (dx+N)%N], t = Math.asinh(v/(mx*0.01))/Math.asinh(100), c = colormap(t);
+    const o = (y*96+x)*4; im.data[o]=c[0]; im.data[o+1]=c[1]; im.data[o+2]=c[2]; im.data[o+3]=255; }
+  p.putImageData(im, 0, 0);
+}
+
+// ---------------- juego ----------------
+const SHARP_BEST = 48, PLANET_BEST = 46, TUT_BEST = 42, TUT_LO = 30, TUT_HI = 58;   // calibrado con 12 cielos (ver INFO.md)
+function setView(v){ view = v; ['vObs','vRes','vTrue'].forEach(id=>$(id).classList.toggle('on', (id==='vObs'&&v==='obs')||(id==='vRes'&&v==='res')||(id==='vTrue'&&v==='true'))); render(); }
+$('vObs').onclick = ()=>setView('obs'); $('vRes').onclick = ()=>setView('res'); $('vTrue').onclick = ()=>setView('true');
+function recompute(){
+  const s = +$('sharp').value; $('sharpVal').textContent = s; current = restore(s);
+  if (view!=='res') setView('res'); else render();
+}
+$('sharp').addEventListener('input', recompute);
+function loadStage(i, newPhoto){
+  S = i; if (newPhoto || !scene || scene.stage!==i) scene = makeScene(i, ++seedCounter*7919);
+  marks = []; scored = false; tries = 0;
+  document.querySelectorAll('.lvl').forEach((b,k)=>{ b.classList.toggle('on', k===i); b.classList.toggle('ok', solved[k]); });
+  $('mTitle').textContent = STAGES[i].t; $('mText').innerHTML = STAGES[i].p; $('mState').innerHTML = '';
+  $('mission').classList.toggle('done', solved[i]);
+  hideResult(); $('legend').style.display = 'none'; $('vTrue').disabled = true;
+  $('sendBtn').textContent = i===0 ? '📡 Enviar a la NASA' : '📡 Enviar mi conteo a la NASA';
+  if (MARKING(i)) $('mState').innerHTML = 'Toca cerca de una estrella: la marca se ajusta sola. <b>Arrástrala</b> para corregirla.';
+  document.querySelector('.play').style.display = i===2 ? 'none' : '';
+  $('psfTxt').innerHTML = '<b>Así veía el Hubble una estrella sola:</b> un punto débil con un gran halo. Todas las estrellas de la foto están "manchadas" así.';
+  $('sharp').value = 0; drawPSFThumb(scene.R);
+  recompute(); setView('res');
+}
+document.querySelectorAll('.lvl').forEach((b,i)=>b.addEventListener('click', ()=>loadStage(i, false)));
+$('newBtn').onclick = ()=>loadStage(S, true);
+// ---------------- marcar ----------------
+// etapas 1 y 2: un toque pone una marca que se ajusta al punto brillante libre más cercano ("atractor");
+// una marca ya puesta se puede arrastrar. Etapa 3: cada toque es un intento, con lupa para apuntar bien.
+const COARSE = matchMedia('(pointer: coarse)').matches, SNAP_R = 1.5, ATTRACT_R = 4.5;
+let press = null, drag = null;
+function imgPt(e){ const r = cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*N, y:(e.clientY-r.top)/r.height*N, cx:e.clientX-r.left, cy:e.clientY-r.top, w:r.width, h:r.height}; }
+function centroid(bx, by){
+  const arr = current; let sw = 0, sx = 0, sy = 0;
+  for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++){ const v = Math.max(0, arr[(by+dj)*N + bx+di]); sw += v; sx += v*(bx+di); sy += v*(by+dj); }
+  return sw > 0 ? {x:sx/sw, y:sy/sw} : {x:bx, y:by};
+}
+function snapPt(x, y){                         // etapa 3: máximo de la foto restaurada a ≤ 1,5 px, con centro por promedio
+  const arr = current; let bx = Math.round(x), by = Math.round(y), bv = -Infinity;
+  for (let j = Math.floor(y-SNAP_R); j <= Math.ceil(y+SNAP_R); j++) for (let i = Math.floor(x-SNAP_R); i <= Math.ceil(x+SNAP_R); i++){
+    if (i < 1 || j < 1 || i >= N-1 || j >= N-1 || (i-x)**2 + (j-y)**2 > SNAP_R*SNAP_R) continue; const v = arr[j*N+i]; if (v > bv){ bv = v; bx = i; by = j; } }
+  return centroid(bx, by);
+}
+// atractor: el máximo local MÁS CERCANO (no el más brillante) a ≤ 4,5 px que no tenga ya una marca;
+// así, en una estrella doble, tocar dos veces marca las dos. null si no hay ninguno libre.
+function attract(x, y, skip){
+  const arr = current, cands = [];
+  for (let j = Math.floor(y-ATTRACT_R); j <= Math.ceil(y+ATTRACT_R); j++) for (let i = Math.floor(x-ATTRACT_R); i <= Math.ceil(x+ATTRACT_R); i++){
+    if (i < 1 || j < 1 || i >= N-1 || j >= N-1 || (i-x)**2 + (j-y)**2 > ATTRACT_R*ATTRACT_R) continue;
+    const v = arr[j*N+i]; if (v <= 0) continue; let isMax = true;
+    for (let dj = -1; dj <= 1 && isMax; dj++) for (let di = -1; di <= 1; di++) if ((di || dj) && arr[(j+dj)*N + i+di] > v){ isMax = false; break; }
+    if (isMax) cands.push({i, j, d:(i-x)**2 + (j-y)**2});
+  }
+  cands.sort((a, b) => a.d - b.d);
+  for (const c of cands){ const q = centroid(c.i, c.j); if (!marks.some(m => m !== skip && Math.hypot(m.x-q.x, m.y-q.y) < 1.5)) return q; }
+  return null;
+}
+function grabIndex(p, pointerType){             // marca bajo el dedo o el mouse
+  const rad = Math.max(2.2, (pointerType === 'mouse' ? 8 : 16)/p.w*N);
+  let best = -1, bd = rad;
+  marks.forEach((m, k) => { const d = Math.hypot(m.x-p.x, m.y-p.y); if (d < bd){ bd = d; best = k; } });
+  return best;
+}
+function tapMark(p){
+  const q = attract(p.x, p.y, null);
+  if (q){ marks.push({x:q.x, y:q.y}); render(); return; }
+  if (marks.some(m => Math.hypot(m.x-p.x, m.y-p.y) < ATTRACT_R)) $('mState').innerHTML = 'Esa estrella ya tiene marca. <b>Arrástrala</b> si quieres moverla.';
+  else { marks.push({x:p.x, y:p.y}); render(); }   // no hay nada brillante cerca: la marca queda donde tocaste
+}
+function tryPlanet(p){
+  const host = scene.stars[0], pl = scene.stars[1], q = snapPt(p.x, p.y);
+  if (Math.hypot(host.x-q.x, host.y-q.y) < 4){ $('mState').innerHTML = 'Esa es la estrella brillante. El planeta está <b>cerca</b> de ella.'; return; }
+  tries++;
+  const hit = Math.hypot(pl.x-q.x, pl.y-q.y) < 3.5;
+  marks.push({x:q.x, y:q.y, hit, judged:true});
+  if (hit) finishPlanet(true);
+  else if (tries >= 3) finishPlanet(false);
+  else $('mState').innerHTML = `Ahí no hay nada: ${tries===1 ? 'probablemente un anillo de la estrella o ruido' : 'otro engaño'}. Te quedan ${3-tries} intento${3-tries===1?'':'s'}.`;
+  render();
+}
+const lp = $('loupeCv'), lctx = lp.getContext('2d'), LZ = 4;   // lupa (solo etapa 3)
+function drawLoupe(){
+  const p = press.p, L = $('loupe'), size = 140, dev = cv.width/p.w;
+  let left = p.cx - size/2, top = p.cy - size - 46;                       // sobre el dedo; si no cabe, al lado
+  if (top < 4){ top = Math.max(4, p.cy - size/2); left = p.cx > p.w/2 ? p.cx - size - 46 : p.cx + 46; }
+  L.style.left = Math.max(4, Math.min(p.w - size - 4, left)) + 'px'; L.style.top = top + 'px'; L.style.display = 'block';
+  const src = size/LZ*dev, W = lp.width;
+  lctx.imageSmoothingEnabled = false; lctx.fillStyle = '#000'; lctx.fillRect(0, 0, W, W);
+  lctx.drawImage(cv, p.cx*dev - src/2, p.cy*dev - src/2, src, src, 0, 0, W, W);
+  const toL = d => d*(p.w/N)*LZ*(W/size), c = W/2;
+  lctx.strokeStyle = 'rgba(255,255,255,0.75)'; lctx.lineWidth = 2;
+  lctx.beginPath(); lctx.moveTo(c-22, c); lctx.lineTo(c-7, c); lctx.moveTo(c+7, c); lctx.lineTo(c+22, c); lctx.moveTo(c, c-22); lctx.lineTo(c, c-7); lctx.moveTo(c, c+7); lctx.lineTo(c, c+22); lctx.stroke();
+  const q = snapPt(p.x, p.y); lctx.strokeStyle = '#3FA7FF'; lctx.lineWidth = 4; lctx.beginPath(); lctx.arc(c + toL(q.x-p.x), c + toL(q.y-p.y), toL(2.6), 0, 6.283); lctx.stroke();
+  $('loupeTxt').textContent = 'soltar: intentar aquí';
+}
+cv.addEventListener('pointerdown', e=>{
+  if (scored) return;
+  const p = imgPt(e);
+  press = {id:e.pointerId, p, x0:e.clientX, y0:e.clientY, type:e.pointerType, loupe: scene.stage===2 && e.pointerType !== 'mouse'};
+  if (MARKING(scene.stage)){ const k = grabIndex(p, e.pointerType); if (k >= 0) press.grab = marks[k]; }
+  try { cv.setPointerCapture(e.pointerId); } catch(_){}
+  if (press.loupe) drawLoupe();
+  e.preventDefault();
+});
+cv.addEventListener('pointermove', e=>{
+  if (press && e.pointerId === press.id){
+    press.p = imgPt(e);
+    if (press.grab && !drag && Math.hypot(e.clientX-press.x0, e.clientY-press.y0) > (press.type === 'mouse' ? 4 : 8)) drag = {m: press.grab};
+    if (drag){ drag.m.x = press.p.x; drag.m.y = press.p.y; render(); }
+    else if (press.loupe) drawLoupe();
+    return;
+  }
+  if (e.pointerType === 'mouse' && MARKING(scene.stage) && !scored) cv.style.cursor = grabIndex(imgPt(e), 'mouse') >= 0 ? 'grab' : 'crosshair';
+});
+cv.addEventListener('pointerup', e=>{
+  if (!press || e.pointerId !== press.id) return;
+  const p = imgPt(e), was = press; press = null; $('loupe').style.display = 'none';
+  if (drag){                                     // soltar una marca arrastrada: se ajusta al punto brillante libre más cercano
+    const m = drag.m; drag = null;
+    const inside = p.cx >= 0 && p.cy >= 0 && p.cx <= p.w && p.cy <= p.h;
+    if (!inside) marks.splice(marks.indexOf(m), 1);   // sacarla de la foto la borra
+    else { const q = attract(p.x, p.y, m); if (q){ m.x = q.x; m.y = q.y; } marks.splice(marks.indexOf(m), 1); marks.push(m); }   // queda como "la última"
+    render(); return;
+  }
+  if (p.cx < 0 || p.cy < 0 || p.cx > p.w || p.cy > p.h) return;
+  if (MARKING(scene.stage)) tapMark(p); else tryPlanet(p);
+});
+cv.addEventListener('pointercancel', ()=>{ press = null; drag = null; $('loupe').style.display = 'none'; render(); });
+if (COARSE) STAGES[2].p += ' <span style="font-size:12px">(Mantén el dedo: una lupa te muestra dónde apuntas.)</span>';
+function markSolved(i){ solved[i] = true; document.querySelectorAll('.lvl')[i].classList.add('ok'); $('mission').classList.add('done'); }
+const LEG_COUNT = '<span class="ok">◯ estrella real que marcaste</span><span class="warn">◯ estrella real que se te escapó</span><span class="bad">✕ estrella inventada</span>';
+const LEG_PLANET = 'Encontrado en verde, intentos fallidos con ✕ rojo, círculo punteado = dónde estaba.';
+function finishPlanet(ok){
+  scored = true; const pl = scene.stars[1];
+  if (!ok) pl.miss = true; else markSolved(2);
+  showResult(ok ? `<p class="big ok">🪐 ¡Encontraste el planeta!</p><p>Estaba a solo ${Math.round(Math.hypot(pl.x-scene.stars[0].x, pl.y-scene.stars[0].y))} píxeles de una estrella unas 9 veces más brillante, escondido en su halo.</p>`
+                : `<p class="big bad">No lo encontraste.</p><p>El círculo punteado muestra dónde estaba. Prueba con otra nitidez: lo bastante nítida para separarlo del halo, sin crear anillos ni polvo.</p>`, ok, LEG_PLANET);
+}
+$('undoBtn').onclick = ()=>{ if (scored || !marks.length) return; marks.pop(); render(); };
+$('clearBtn').onclick = ()=>{ marks = []; scored = false; scene.stars.forEach(s=>s.miss=false); hideResult(); $('legend').style.display='none'; render(); };
+$('sendBtn').onclick = ()=>{ if (scene.stage===0) scoreTutorial(); else scoreCount(); };
+// ventana de resultado: opciones según cómo te fue (intentar de nuevo, otra foto, siguiente etapa, respuesta correcta, explicación)
+let lastResult = null;
+function hideResult(){ $('result').classList.remove('show'); }
+function showResult(html, ok, legend, isSol){
+  lastResult = {html, ok, legend, isSol};
+  const next = S < 2 ? `<button class="b${ok ? ' primary' : ''}" data-a="next">Siguiente etapa →</button>` : '';
+  const btns = [];
+  if (ok) btns.push(S < 2 ? next : `<button class="b primary" data-a="another">🔭 Jugar con otra foto</button>`);
+  else btns.push(`<button class="b primary" data-a="retry">↺ Intentar de nuevo</button>`);
+  if (ok && S < 2) btns.push(`<button class="b dark" data-a="another">🔭 Otra foto</button>`);
+  if (!ok) btns.push(`<button class="b dark" data-a="another">🔭 Otra foto</button>`);
+  if (!ok && next) btns.push(next);
+  if (!ok && !isSol) btns.push(`<button class="b math" data-a="sol">✓ Respuesta correcta</button>`);
+  btns.push(`<button class="b math" data-a="math">📐 Explicación</button>`);
+  // la primera ocupa toda la fila; si sobra una al final, también
+  const rest = btns.slice(1), out = [btns[0].replace('class="b', 'class="b full')];
+  rest.forEach((b, k) => out.push(k === rest.length-1 && rest.length % 2 ? b.replace('class="b', 'class="b full') : b));
+  $('rBody').innerHTML = html + `<div class="btns">${out.join('')}</div>`;
+  $('rBody').querySelectorAll('[data-a]').forEach(b => b.onclick = ()=>({
+    retry: ()=>loadStage(S, false), another: ()=>loadStage(S, true), next: ()=>loadStage(S+1, false),
+    sol: showSolution, math: openExplain
+  })[b.dataset.a]());
+  $('vTrue').disabled = false;
+  if (legend){ $('legend').innerHTML = legend; $('legend').style.display = ''; }
+  $('mState').innerHTML = `${ok ? '✅ Etapa lograda.' : isSol ? 'Esta es la respuesta correcta.' : 'Resultado enviado.'} <button class="linkbtn" id="reopen">Ver opciones</button>`;
+  $('reopen').onclick = ()=>$('result').classList.add('show');
+  render(); setTimeout(()=>$('result').classList.add('show'), 350);   // primero se ven las marcas en la foto; luego la ventana
+}
+function judgeCount(){
+  scene.stars.forEach(s=>{ s.found = false; s.miss = false; }); marks.forEach(m=>m.hit = false);
+  for (const m of marks){
+    let best = null, bd = 3;
+    for (const s of scene.stars){ if (s.found) continue; const d = Math.hypot(s.x-m.x, s.y-m.y); if (d < bd){ bd = d; best = s; } }
+    if (best){ best.found = true; m.hit = true; }
+  }
+  scene.stars.forEach(s=>{ s.miss = !s.found; });
+  scored = true;
+  const hits = marks.filter(m=>m.hit).length, total = scene.stars.length;
+  return {hits, total, fakes: marks.length - hits, missed: total - hits, pairs: scene.stars.filter(s=>s.pair).length/2, pairsSplit: scene.stars.filter(s=>s.pair && s.found).length};
+}
+function scoreCount(){
+  if (scored) return;
+  const {hits, total, fakes, missed, pairs, pairsSplit} = judgeCount();
+  const ok = missed <= 1 && fakes === 0;
+  if (ok) markSolved(0);
+  let msg;
+  if (ok) msg = `<p class="big ok">✅ ¡Ciencia rescatada!</p><p>Encontraste ${hits} de ${total} estrellas (${Math.floor(pairsSplit/2)} de las ${pairs} estrellas dobles) y no inventaste ninguna.</p>`;
+  else if (fakes > 0 && missed <= 1) msg = `<p class="big bad">❌ Inventaste ${fakes} estrella${fakes>1?'s':''}.</p><p>Encontraste ${hits} de ${total}, pero marcaste puntitos que no existen. ¿Te pasaste de nitidez? Ese "polvo" es ruido amplificado.</p>`;
+  else if (fakes === 0) msg = `<p class="big warn">Se te escaparon ${missed} estrellas.</p><p>Encontraste ${hits} de ${total}. Mira los círculos punteados: muchas son estrellas dobles que en la foto borrosa parecen una sola. ¿Falta nitidez?</p>`;
+  else msg = `<p class="big bad">Se te escaparon ${missed} y inventaste ${fakes}.</p><p>Encontraste ${hits} de ${total}. Busca un punto medio: lo bastante nítida para separar las dobles, sin que aparezca polvo de ruido.</p>`;
+  showResult(msg, ok, LEG_COUNT);
+}
+function scoreTutorial(){
+  if (scored) return;
+  if (!marks.length){ $('mState').innerHTML = 'Primero <b>marca la estrella</b> tocándola.'; $('mState').classList.remove('shake'); void $('mState').offsetWidth; $('mState').classList.add('shake'); return; }
+  const {hits, fakes} = judgeCount(), sh = +$('sharp').value;
+  const ok = hits === 1 && fakes === 0 && sh >= TUT_LO && sh <= TUT_HI;
+  if (ok) markSolved(0);
+  let msg;
+  if (ok) msg = `<p class="big ok">✅ ¡Estrella rescatada!</p><p>El halo volvió a ser un punto. Entre nitidez ${TUT_LO} y ${TUT_HI} la estrella queda nítida sin que el ruido crezca demasiado. En la etapa 2 hay muchas estrellas, y algunas son <b>dobles</b>.</p>`;
+  else if (hits === 0) msg = `<p class="big bad">Tu marca no quedó sobre la estrella.</p><p>Mira el círculo punteado: ahí estaba. Puedes arrastrar una marca para corregirla.</p>`;
+  else if (fakes > 0) msg = `<p class="big bad">❌ Marcaste ${fakes} punto${fakes>1?'s':''} de más.</p><p>Solo hay una estrella. Los otros puntitos son ruido amplificado.</p>`;
+  else if (sh < TUT_LO) msg = `<p class="big warn">La estrella todavía tiene halo.</p><p>Con nitidez ${sh} la luz sigue repartida. Sube la nitidez hasta que se junte en un punto.</p>`;
+  else msg = `<p class="big warn">Te pasaste de nitidez.</p><p>Con ${sh} aparece <b>polvo de ruido</b> alrededor, puntitos que podrían parecer estrellas. Bájala un poco: el punto limpio se logra antes.</p>`;
+  showResult(msg, ok, LEG_COUNT);
+}
+// respuesta correcta: se muestra en la foto, sin contar la etapa como lograda
+function showSolution(){
+  hideResult(); scored = false;
+  if (S===0){ $('sharp').value = TUT_BEST; recompute(); marks = scene.stars.map(st=>({x:st.x, y:st.y})); judgeCount();
+    showResult(`<p class="big sol">Respuesta correcta</p><p>Con nitidez <b>${TUT_BEST}</b> (cualquier valor entre ${TUT_LO} y ${TUT_HI} sirve) el halo vuelve a ser un punto y el ruido todavía no molesta.</p>`, false, LEG_COUNT, true); }
+  else if (S===1){ $('sharp').value = SHARP_BEST; recompute(); marks = scene.stars.map(st=>({x:st.x, y:st.y})); const r = judgeCount();
+    showResult(`<p class="big sol">Respuesta correcta</p><p>Había <b>${r.total} estrellas</b>, ${r.pairs} de ellas dobles. Con nitidez <b>${SHARP_BEST}</b> las dobles se separan sin que el ruido invente otras.</p>`, false, LEG_COUNT, true); }
+  else { $('sharp').value = PLANET_BEST; recompute(); const pl = scene.stars[1]; pl.miss = false; marks = [{x:pl.x, y:pl.y, hit:true, judged:true}]; scored = true;
+    showResult(`<p class="big sol">Respuesta correcta</p><p>El planeta está en el círculo verde. Con nitidez <b>${PLANET_BEST}</b> aparece separado del halo de su estrella.</p>`, false, LEG_PLANET, true); }
+}
+$('hintBtn').onclick = ()=>{ $('mState').innerHTML = STAGES[S].hint; };
+$('solBtn').onclick = showSolution;
+// las ecuaciones largas van en una sola línea: se achican hasta caber en el ancho disponible
+const EQ_MIN = 12;   // px: por debajo, la ecuación de una línea ya no se lee y se usa la versión en dos líneas
+function fitEqs(){
+  document.querySelectorAll('#explain .eq.one math').forEach(m => {
+    const box = m.parentElement, alt = box.nextElementSibling && box.nextElementSibling.classList.contains('alt') ? box.nextElementSibling : null;
+    box.hidden = false; if (alt) alt.hidden = true;
+    m.style.fontSize = '';
+    const row = m.firstElementChild, avail = m.parentElement.clientWidth - 34;
+    if (!row || !avail) return;
+    for (let k = 0; k < 6; k++){
+      const w = row.getBoundingClientRect().width;
+      if (w <= avail) break;
+      m.style.fontSize = (parseFloat(getComputedStyle(m).fontSize)*avail/w*0.98).toFixed(1) + 'px';
+    }
+    if (alt && parseFloat(getComputedStyle(m).fontSize) < EQ_MIN){ box.hidden = true; alt.hidden = false; }
+  });
+}
+function openExplain(){ $('explain').classList.add('show'); $('explain').querySelector('.res').scrollTop = 0; fitEqs(); }
+addEventListener('resize', ()=>{ if ($('explain').classList.contains('show')) fitEqs(); });
+$('revT').onclick = openExplain;
+$('explainClose').onclick = ()=>$('explain').classList.remove('show');
+$('rClose').onclick = hideResult;
+['explain'].forEach(id => $(id).addEventListener('click', e => { if (e.target.id === id) $(id).classList.remove('show'); }));
+$('advT').onclick = ()=>{ $('adv').classList.toggle('show'); fitEqs(); };
+// ---------------- portada: la historia, con estrellas borrosas detrás ----------------
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sky = $('sky'), sk = sky.getContext('2d');
+let skyStars = [], skyOn = false, introTimers = [];
+function sizeSky(){
+  const d = Math.min(2, devicePixelRatio||1), w = innerWidth, h = innerHeight;
+  sky.width = Math.round(w*d); sky.height = Math.round(h*d); sk.setTransform(d, 0, 0, d, 0, 0);
+  const n = Math.round(Math.min(90, w*h/14000)), r = rng(4242);
+  skyStars = Array.from({length:n}, () => { const b = 0.25 + r()**2*0.9;
+    return {x:r()*w, y:r()*h, R:6 + b*30 + r()*8, b, ph:r()*6.28, vx:(r()-0.5)*0.06, warm:r() < 0.25}; });
+}
+function drawSky(t){
+  const w = innerWidth, h = innerHeight;
+  sk.globalCompositeOperation = 'source-over'; sk.fillStyle = '#05070F'; sk.fillRect(0, 0, w, h);
+  sk.globalCompositeOperation = 'lighter';
+  for (const s of skyStars){
+    s.x += s.vx; if (s.x < -60) s.x = w + 60; if (s.x > w + 60) s.x = -60;
+    const R = s.R*(1 + 0.07*Math.sin(t*0.0006 + s.ph)), col = s.warm ? '255,214,150' : '150,190,255';
+    // la mancha de 1990: un halo ancho con un borde más brillante y un núcleo débil
+    let g = sk.createRadialGradient(s.x, s.y, 0, s.x, s.y, R*1.15);
+    g.addColorStop(0, `rgba(${col},${0.10*s.b})`); g.addColorStop(0.72, `rgba(${col},${0.06*s.b})`);
+    g.addColorStop(0.88, `rgba(${col},${0.20*s.b})`); g.addColorStop(1, `rgba(${col},0)`);
+    sk.fillStyle = g; sk.beginPath(); sk.arc(s.x, s.y, R*1.15, 0, 6.283); sk.fill();
+    g = sk.createRadialGradient(s.x, s.y, 0, s.x, s.y, R*0.28);
+    g.addColorStop(0, `rgba(255,255,255,${0.55*s.b})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    sk.fillStyle = g; sk.beginPath(); sk.arc(s.x, s.y, R*0.28, 0, 6.283); sk.fill();
+  }
+  if (skyOn && !REDUCED) requestAnimationFrame(drawSky);
+}
+function paintObs(c, sc){   // una "foto de 1990": la observación borrosa de una escena simulada
+  const g = c.getContext('2d'), im = g.createImageData(N, N), s = sc.peak*0.006, top = Math.asinh(sc.peak*0.09/s);
+  for (let i=0;i<N*N;i++){ const v = sc.obs[i], col = colormap(Math.sign(v)*Math.asinh(Math.abs(v)/s)/top); im.data[i*4]=col[0]; im.data[i*4+1]=col[1]; im.data[i*4+2]=col[2]; im.data[i*4+3]=255; }
+  g.putImageData(im, 0, 0);
+}
+const tiles = [...document.querySelectorAll('.intro .tile')];
+function fillTiles(){
+  tiles.forEach((t, k) => introTimers.push(setTimeout(()=>{ if (!t.dataset.done){ paintObs(t.querySelector('canvas'), makeScene(k===3 ? 2 : 1, 1000 + k*7919)); t.dataset.done = 1; } t.classList.add('on'); }, 600 + k*700)));
+}
+function openIntro(){
+  const I = $('intro'); I.classList.remove('gone'); I.style.display = '';
+  introTimers.forEach(clearTimeout); introTimers = [];
+  const lines = [...I.querySelectorAll('.line')]; lines.forEach(l => l.classList.remove('on')); $('playBtn').classList.remove('on');
+  const step = REDUCED ? 0 : 1900;
+  lines.forEach((l, k) => introTimers.push(setTimeout(()=>l.classList.add('on'), 400 + k*step)));
+  introTimers.push(setTimeout(()=>$('playBtn').classList.add('on'), 400 + lines.length*step));
+  sizeSky(); if (!skyOn){ skyOn = true; requestAnimationFrame(drawSky); } fillTiles();
+}
+function revealAll(){ document.querySelectorAll('.intro .line').forEach(l=>l.classList.add('on')); $('playBtn').classList.add('on'); }
+function closeIntro(){
+  introTimers.forEach(clearTimeout); introTimers = [];
+  $('intro').classList.add('gone'); introTimers.push(setTimeout(()=>{ skyOn = false; $('intro').style.display = 'none'; fitCanvas(); }, 700));
+}
+$('playBtn').onclick = closeIntro; $('skipBtn').onclick = closeIntro;
+$('intro').addEventListener('click', e => { if (e.target.id !== 'playBtn' && e.target.id !== 'skipBtn') revealAll(); });
+addEventListener('keydown', e => { if (!$('intro').classList.contains('gone') && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); closeIntro(); } });
+addEventListener('resize', ()=>{ if (skyOn) sizeSky(); });
+$('storyT').onclick = openIntro;
+openIntro();
+loadStage(0, true); fitCanvas();
+})();
+
+</script>
+</body>
+</html>
