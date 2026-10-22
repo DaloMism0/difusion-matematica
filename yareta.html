@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yareta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#EEF2F6;--panel:#FFFFFF;--line:#E3E8EF;--ink:#1D2433;--muted:#6B778C;--accent:#3E8E41;--accent-ink:#FFFFFF;--glow:rgba(62,142,65,0.28);--card:#F5F7FA;--track:#E8EDF3;--water:#2F86D6;--vit:#964600;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Inter','Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;}
+  .game{display:grid;grid-template-columns:350px 1fr;height:100vh;min-height:600px;}
+  @media (max-width:860px){
+    html,body{overflow:auto;} .game{grid-template-columns:1fr;grid-template-rows:calc(86vw + 70px) auto;height:auto;min-height:0;}
+    .view{align-items:flex-end;padding-bottom:4px;}
+    .side{order:2;padding:14px 16px 18px;gap:10px;box-shadow:0 -8px 24px rgba(20,30,50,0.08);border-right:none;border-top:1px solid var(--line);}
+    .side h1{font-size:21px;}
+  }
+  .side{position:relative;z-index:2;display:flex;flex-direction:column;gap:13px;padding:22px 22px 18px;background:var(--panel);border-right:1px solid var(--line);box-shadow:8px 0 30px rgba(20,30,50,0.06);overflow-y:auto;}
+  .kicker{font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:600;letter-spacing:0.16em;color:var(--accent);margin:0;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:25px;line-height:1.1;font-weight:700;margin:4px 0 0;letter-spacing:-0.01em;}
+  .ins{font-size:14px;line-height:1.5;color:var(--muted);margin:0;} .ins b{color:var(--ink);}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;}
+  .stat .lbl{font-size:11.5px;font-weight:600;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;}
+  .stat .big{font-family:'Space Grotesk',sans-serif;font-size:38px;font-weight:700;line-height:1.05;margin:4px 0 6px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;}
+  .stat .big small{font-size:15px;font-weight:600;color:var(--muted);letter-spacing:0;}
+  .stat .unit{font-size:12.5px;color:var(--muted);margin:-2px 0 8px;}
+  .stat .row{display:flex;gap:16px;font-size:12.5px;color:var(--muted);flex-wrap:wrap;} .stat .row b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;}
+  .stat .sub{margin-top:8px;}
+  .vit .big{color:var(--vit);} .wat .big{color:var(--water);}
+  .meter{position:relative;height:8px;border-radius:5px;background:var(--track);overflow:hidden;margin-bottom:4px;} .meter i{display:block;height:100%;border-radius:5px;transition:width .3s;}
+  .scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+  .trend{font-size:13px;line-height:1.45;margin:8px 0 0;padding:7px 10px;border-radius:10px;background:#fff;border:1px solid var(--line);}
+  .trend.up{color:#2C6B2F;} .trend.down{color:#A13B12;}
+  .nums{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .nums div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;}
+  .nums span{display:block;font-size:10.5px;font-weight:600;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;}
+  .nums b{font-family:'Space Grotesk',sans-serif;font-size:19px;font-variant-numeric:tabular-nums;}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px;}
+  .sub{font-size:13px;line-height:1.5;color:var(--muted);margin:0;} .sub b{color:var(--ink);}
+  .spacer{flex:1;}
+  .foot{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px;}
+  button.b{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;border-radius:12px;padding:11px 12px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);}
+  button.b:hover{filter:brightness(0.97);}
+  .view{position:relative;overflow:hidden;background:#2B2B2B;display:flex;align-items:center;justify-content:center;}
+  .stage{position:relative;--k:1;box-shadow:0 20px 60px rgba(0,0,0,0.35);border-radius:6px;}
+  .stage canvas{display:block;width:100% !important;height:100% !important;border-radius:6px;}
+  /* rótulos sobre los controles que dibuja la simulación (no los tocan) */
+  .ov{position:absolute;pointer-events:none;white-space:nowrap;line-height:1;font-family:'Inter',sans-serif;font-size:calc(var(--k) * 9px);color:#C9D1DB;}
+  .ov.w{color:#8DBEF5;font-weight:600;} .ov.v{color:#D9A066;}
+  .badge{position:absolute;top:14px;left:14px;z-index:2;font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:#E8ECF1;background:rgba(20,20,20,0.6);border:1px solid rgba(255,255,255,0.12);padding:7px 14px;border-radius:999px;pointer-events:none;min-width:118px;text-align:center;font-variant-numeric:tabular-nums;}
+  /* ---------- portada ---------- */
+  .intro{position:fixed;inset:0;z-index:50;background:#E9E1D3;display:flex;align-items:center;justify-content:center;padding:24px 18px;overflow:hidden;transition:opacity .7s;}
+  .intro.gone{opacity:0;pointer-events:none;}
+  .intro #bg{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;object-fit:cover;opacity:0.55;}
+  .intro .card2{position:relative;max-width:640px;text-align:center;padding:30px 28px 26px;border-radius:26px;background:radial-gradient(closest-side, rgba(245,240,230,0.97) 0%, rgba(245,240,230,0.92) 70%, rgba(245,240,230,0) 100%);}
+  @media (max-width:860px){ .intro .card2{padding:22px 14px;} }
+  .intro .kicker{margin-bottom:14px;}
+  .intro h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,5vw,46px);line-height:1.05;margin:0 0 18px;letter-spacing:-0.02em;font-weight:700;}
+  .intro h2 em{font-style:normal;color:var(--accent);}
+  .intro p{font-size:clamp(15px,1.9vw,18px);line-height:1.65;color:#4A4A3F;margin:0 0 26px;}
+  .intro p b{color:var(--ink);}
+  .intro .line{opacity:0;transition:opacity .9s;} .intro .line.on{opacity:1;}
+  .intro .go{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;border:none;border-radius:999px;padding:16px 46px;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 10px 30px var(--glow);opacity:0;transform:scale(0.94);transition:opacity .8s, transform .8s, filter .15s;}
+  .intro .go.on{opacity:1;transform:none;} .intro .go:hover{filter:brightness(1.08);}
+  .intro .skip{position:absolute;bottom:16px;right:18px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;}
+  .linkbtn{background:none;border:none;color:var(--muted);font-size:12.5px;text-decoration:underline;cursor:pointer;padding:0;text-align:left;font-family:inherit;}
+</style>
+<!-- Librería p5.js: provee setup(), draw(), createCanvas(), fill(), rect(), random()... -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<!-- La simulación del colega (contenido de yareta.txt, sin cambios salvo dos arreglos para que arranque) -->
+<script>
+let boton; // Parámetros usados solamente en el modo MOSTRAR_CASO.
+// Cantidad de yaretas presentes al comenzar cada simulación.
+// Se distribuyen aleatoriamente sin superponerse.
+let YARETAS_INICIALES = 4; // Se ejecutan los meses 0, 1, ..., TOTAL_MESES_CASO - 1.
+// Para alcanzar y mostrar el mes 12000, usar 12001.
+let TOTAL_MESES_CASO = 240001; // Cantidad de meses calculados en cada cuadro.
+// Un valor alto acelera la simulación, pero exige más cálculo.
+let MESES_POR_FRAME = 12; // Variables internas del modo visual.
+let mesVisual = 0;
+let pausado = false;
+let cols = 200;
+let rows = 200;
+let grano = 3;
+let maxYaretas = 40000;
+let grid;
+let nextGrid;
+let idYareta;
+let nextIdYareta;
+let X;
+let Y;
+let contadorID = 1;
+let b = 0; // mes del año: 0,...,11
+let a = 0; // año
+// Parámetros activos durante una corrida.
+let lam = 1e-2;
+let lam2 = 1e-3;
+let L = 5000.0;
+
+
+let edad;
+let tamano;
+let fuerza;
+let necesidad;
+let viva; // Cambio neto de tamaño durante un mes.
+let deltaTamano;
+let totalNecesidad; 
+
+// ============================================================
+// PARÁMETROS BIOLÓGICOS AJUSTADOS
+// ============================================================
+// Antes era 0.2. Ahora la fuerza cambia más lentamente.
+let epsilon = 0.05; // La expansión se detiene gradualmente al aproximarse a alpha.
+let alpha = 4000.0; // Una celda muerta permanece visible durante un año.
+let mesesCeldaMuerta = 12; // Margen usado para ubicar aleatoriamente las yaretas iniciales.
+let margenInicial = 8;
+
+
+// Parámetros del semillado y la dispersión.
+let permitirSemillado = true;
+let factorRadioDispersion = 2;
+let factorMediaDispersion = 1;
+let sigmaDispersion = 2.0; // Función de producción de semillas.
+let AA = 60.0;
+let BB = 120.0;
+let aa = 8.0;
+let KK = (BB - AA) / (2 * Math.log(aa - 1));
+let MM = 1; //M
+let theta = (AA + BB) / 2;
+let LL = 12000; // D es en realidad en el codigo LL+AA
+// Estadística anual.
+let fuerzaMensual; // ============================================================
+// variables para slider
+// ============================================================
+let agua;
+let semillas;
+let xOffset;
+
+// ============================================================
+// SETUP
+// ============================================================
+
+function setup() {
+    // Processing genera internamente settings() a partir de size().
+    // Por eso no declaramos settings() de forma explícita.
+    createCanvas(700, 600); //(grano*cols+100, grano*rows)
+    frameRate(60);
+    background(35);
+    boton = new Botones(1);
+    boton.CreaBoton(0, 615, 40, "Reiniciar");
+    boton.dibuja();
+    agua = new Slider(615, 120, 0, 5000, 2500, "Agua");
+    agua.dibuja();
+    grid = Array.from(new Array(cols), () => new Array(rows));
+    nextGrid = Array.from(new Array(cols), () => new Array(rows));
+    idYareta = Array.from(new Array(cols), () => new Array(rows));
+    nextIdYareta = Array.from(new Array(cols), () => new Array(rows));
+    X = new Array(maxYaretas);
+    Y = new Array(maxYaretas);
+    edad = new Array(maxYaretas);
+    tamano = new Array(maxYaretas);
+    fuerza = new Array(maxYaretas);
+    necesidad = new Array(maxYaretas);
+    deltaTamano = new Array(maxYaretas);
+    viva = new Array(maxYaretas);
+    fuerzaMensual = new Array(TOTAL_MESES_CASO);
+    iniciarCasoVisual();
+}
+
+function draw() {
+    if (!pausado) {
+        for (let k = 0; k < MESES_POR_FRAME; k++) {
+            if (mesVisual >= TOTAL_MESES_CASO) {
+                pausado = true;
+                break;
+            }
+            a = mesVisual / 12;
+            b = mesVisual % 12;
+            stepOneMonth(mesVisual);
+            mesVisual++;
+        }
+    }
+    agua.dibuja();
+    graficaFuerza(215, mesVisual);
+    dibujarCasoVisual();
+}
+
+
+// ============================================================
+// MODO VISUAL: UNA SOLA SIMULACIÓN
+// ============================================================
+
+function iniciarCasoVisual() {
+    resetModel();
+    inicializarYaretasIniciales(0);
+    mesVisual = 0;
+    pausado = false;
+}
+function dibujarCasoVisual() {
+    for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+            let estado = grid[x][y];
+            if (estado == 0) {
+                fill(150, 100, 50); // terreno vacío
+            } else if (estado == 1) {
+                fill(37, 69, 34); // tejido vivo
+            } else if (estado == 2) {
+                fill(18, 50, 50); // semilla establecida / centro nuevo
+            } else if (estado == 3) {
+                fill(97, 85, 43); // celda muerta temporal
+            } else {
+                fill(242, 239, 226); // seguridad ante estado no válido
+            }
+            rect(x * grano, y * grano, grano, grano);
+        }
+    }
+}
+
+
+function mouseClicked() {
+    if (boton.ActInBoton() == 0) {
+        iniciarCasoVisual();
+    }
+}
+function mousePressed() {
+    if (agua.inSlider()) {
+        agua.lock = true;
+    }
+}
+function mouseDragged() {
+    if (agua.lock) {
+        agua.pc = constrain(mouseX, agua.px, agua.px + 68);
+        agua.vc = ((agua.pc - agua.px) * (agua.vmax - agua.vmin)) / 68;
+    }
+}
+function mouseReleased() {
+    agua.lock = false;
+}
+
+
+
+// ============================================================
+// INDIVIDUOS VIVOS
+// ============================================================
+
+
+function contarYaretasVivas() {
+  let cantidad = 0;
+
+  for (let id = 1; id < contadorID; id++) {
+    if (viva[id]) cantidad++;
+  }
+
+  return cantidad;
+}
+
+
+// ============================================================
+// REINICIO DEL MODELO
+// ============================================================
+
+function resetModel() {
+    contadorID = 1;
+    a = 0;
+    b = 0;
+    totalNecesidad = 0;
+    for (let x = 0; x < cols; x++) {
+        for (let y = 0; y < rows; y++) {
+            grid[x][y] = 0;
+            nextGrid[x][y] = 0;
+            idYareta[x][y] = 0;
+            nextIdYareta[x][y] = 0;
+        }
+    }
+    for (let i = 0; i < maxYaretas; i++) {
+        X[i] = 0;
+        Y[i] = 0;
+        edad[i] = 0;
+        tamano[i] = 0;
+        fuerza[i] = 0;
+        necesidad[i] = 0;
+        deltaTamano[i] = 0;
+        viva[i] = false;
+    }
+    for (let i = 0; i < 35; i++) {
+        fuerzaMensual[i] = 0;
+    }
+}
+
+// ============================================================
+// YARETAS INICIALES
+// ============================================================
+
+function inicializarYaretasIniciales(mesGlobal) {
+    let creadas = 0;
+    let intentos = 0;
+    let intentosMaximos = max(YARETAS_INICIALES * 200, 1000);
+    while (
+        creadas < YARETAS_INICIALES &&
+        intentos < intentosMaximos &&
+        contadorID < maxYaretas
+    ) {
+        intentos++;
+        let x = int(random(margenInicial, cols - margenInicial));
+        let y = int(random(margenInicial, rows - margenInicial));
+        if (grid[x][y] != 0) continue;
+        grid[x][y] = 2;
+        idYareta[x][y] = contadorID;
+        tamano[contadorID] = 1;
+        X[contadorID] = x;
+        Y[contadorID] = y;
+        edad[contadorID] = 0;
+        fuerza[contadorID] = random(0, 10);
+        viva[contadorID] = true;
+        contadorID++;
+        creadas++;
+    }
+}
+
+// ============================================================
+// PASO MENSUAL
+// ============================================================
+
+function stepOneMonth(mesGlobal) {
+  // ----------------------------------------------------------
+  // 1. Reiniciar el siguiente estado
+  // ----------------------------------------------------------
+  for (let x = 0; x < cols; x++) {
+    for (let y = 0; y < rows; y++) {
+      nextGrid[x][y] = 0;
+      nextIdYareta[x][y] = 0;
+    }
+  }
+  for (let id = 1; id < contadorID; id++) {
+    deltaTamano[id] = 0;
+  }
+  // ----------------------------------------------------------
+  // 2. Necesidad total de agua
+  // ----------------------------------------------------------
+  totalNecesidad = 0;
+  for (let id = 1; id < contadorID; id++) {
+    if (!viva[id]) continue;
+    edad[id] += 1;
+    necesidad[id] = log(edad[id] + 2) * tamano[id];
+    totalNecesidad += necesidad[id];
+  }
+  // ----------------------------------------------------------
+  // 3. Agua y fuerza
+  // ----------------------------------------------------------
+  if (totalNecesidad > 0) {
+    let saturacion = agua.vc / totalNecesidad;
+    let saturacionFuerza = min(saturacion, 1);
+    for (let id = 1; id < contadorID; id++) {
+      if (!viva[id]) continue;
+      fuerza[id] += epsilon * (saturacionFuerza - 0.5);
+      fuerza[id] = constrain(fuerza[id], 0, 10);
+    }
+  }
+  // ----------------------------------------------------------
+  // 4. Reglas espaciales
+  // ----------------------------------------------------------
+  for (let x = 0; x < cols; x++) {
+    for (let y = 0; y < rows; y++) {
+      // CELDA VACÍA: POSIBLE EXPANSIÓN.
+      if (grid[x][y] == 0) {
+        let heredado = buscarIDVecinoVivo(x, y);
+        if (heredado != 0 && viva[heredado]) {
+          let v3 = contarVecinosMismoID(x, y, 3, heredado);
+          // En un círculo discreto de radio 3 hay unas 29 celdas.
+          let proporcionVecinos = v3 / 29.0;
+          let terminoTamano = log(alpha/tamano[heredado]);
+          terminoTamano = max(terminoTamano, 0);
+          let p = lam * fuerza[heredado] * proporcionVecinos* terminoTamano;
+          p = constrain(p, 0, 1);
+          if (random(1) < p) {
+            nextGrid[x][y] = 1;
+            nextIdYareta[x][y] = heredado;
+            deltaTamano[heredado] += 1;
+          }
+        }
+      }
+      // TEJIDO VIVO: POSIBLE MUERTE.
+      else if (grid[x][y] == 1) {
+        let id = idYareta[x][y];
+
+        if (id == 0 || !viva[id]) {
+          nextGrid[x][y] = 0;
+          nextIdYareta[x][y] = 0;
+          continue;
+        }
+
+        let edadAnios = edad[id] / 12.0;
+        let factorEdad = edadAnios; //log(edadAnios + 2.0);
+        let factorDebilidad = 1.0-0.09*fuerza[id]; //(10.0 - fuerza[id]) / 10.0;
+
+        let pm = lam2 * factorEdad * factorDebilidad;
+       
+        if (random(1) < pm) {
+          nextGrid[x][y] = 3;
+          nextIdYareta[x][y] = id;
+          deltaTamano[id] -= 1;
+        }
+        else {
+          nextGrid[x][y] = 1;
+          nextIdYareta[x][y] = id;
+        }
+      }
+      // RAIZ NO MUERE SALVO QUE LA PLANTA MUERA
+      else if (grid[x][y] == 2) {
+        nextGrid[x][y]=2;
+        nextIdYareta[x][y] = idYareta[x][y];
+      }
+      //CELDA MUERTA: DESAPARECE DESPUÉS DE 12 MESES.
+      else if (grid[x][y] >= 3) {
+        if (grid[x][y]<15) {
+          grid[x][y]++;
+        }
+        else {
+          grid[x][y]=0;
+        }
+      }
+    }
+  }
+  // ---------------------------------------------------------
+  // 5. Aplicar simultáneamente los cambios de tamaño
+  // ----------------------------------------------------------
+  for (let id = 1; id < contadorID; id++) {
+    if (!viva[id]) continue;
+    tamano[id] += deltaTamano[id];
+    tamano[id] = max(tamano[id], 0);
+    let muerePorNoEstablecerse = edad[id] > 36 && tamano[id] <= 1;
+    if (tamano[id] <= 0 || muerePorNoEstablecerse) {
+      tamano[id] = 0;
+      fuerza[id] = 0;
+      necesidad[id] = 0;
+      viva[id]=false;
+      let cx = X[id];
+      let cy = Y[id];
+      if (cx >= 0 && cx < cols && cy >= 0 && cy < rows
+          && nextIdYareta[cx][cy] == id) {
+        nextGrid[cx][cy] = 0;
+        nextIdYareta[cx][cy] = 0;
+      }
+    }
+  }
+  // ----------------------------------------------------------
+  // 6. Semillado
+  // ----------------------------------------------------------
+
+  if ((b == 8 || b == 9) && permitirSemillado) {
+    let individuosAntesSemillado = contadorID;
+    for (let id = 1; id < individuosAntesSemillado; id++) {
+      if (!viva[id]) continue;
+      let R = factorRadioDispersion * sqrt(tamano[id]/PI); 
+      let semillasEsperadas;
+      semillasEsperadas = 0.01*ff(edad[id], MM, KK, theta)
+                          * log(tamano[id])
+                          * fuerza[id];   
+      let numeroSemillas = round(semillasEsperadas);
+      for (let s = 0; s < numeroSemillas; s++) {
+        if (contadorID >= maxYaretas) break;
+        let angulo = random(TWO_PI);
+        let distancia = gauss(R, sigmaDispersion);
+        let x = round(X[id] + distancia * cos(angulo));
+        let y = round(Y[id] + distancia * sin(angulo));
+        // Si cae fuera del terreno, se descarta únicamente esa semilla.
+        if (x < 1 || x > cols - 2 || y < 1 || y > rows - 2) {
+          continue;
+        }
+        if (nextGrid[x][y] == 0) {
+          nextGrid[x][y] = 2;
+          nextIdYareta[x][y] = contadorID;
+          tamano[contadorID] = 1;
+          X[contadorID] = x;
+          Y[contadorID] = y;
+          edad[contadorID] = 0;
+          fuerza[contadorID] = constrain(fuerza[id],0,10);
+          viva[contadorID]=true;
+          contadorID++;
+        }
+      }
+    }
+  }
+
+
+  // ----------------------------------------------------------
+  // 7. Intercambiar matrices
+  // ----------------------------------------------------------
+
+  let tempGrid = grid;
+  grid = nextGrid;
+  nextGrid = tempGrid;
+
+  let tempID = idYareta;
+  idYareta = nextIdYareta;
+  nextIdYareta = tempID;
+  
+  // ----------------------------------------------------------
+  // 8. Estadística fuerza
+  // ----------------------------------------------------------
+
+  let fza=0;
+  let poblacion=0;
+  for (let id = 1; id < contadorID; id++) {
+     if (!viva[id]) continue;
+     fza=fza+fuerza[id];
+     poblacion++;
+  }
+  fuerzaMensual[mesGlobal]=fza/poblacion;
+  
+}
+
+
+// ============================================================
+// VECINDARIOS
+// ============================================================
+
+function buscarIDVecinoVivo(x0, y0) {
+    let maxCandidatos = 9;
+    let candidatos = new Array(maxCandidatos);
+    let cantidad = 0;
+    for (let x = x0 - 1; x <= x0 + 1; x++) {
+        for (let y = y0 - 1; y <= y0 + 1; y++) {
+            if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
+            if (grid[x][y] == 1 || grid[x][y] == 2) {
+                let id = idYareta[x][y];
+                if (viva[id]) {
+                    candidatos[cantidad] = id;
+                    cantidad++;
+                }
+            }
+        }
+    }
+    if (cantidad == 0) return 0;
+    return candidatos[int(random(cantidad))];
+}
+
+
+function contarVecinosMismoID(x0,y0,radio,idRef) {
+  let contador = 0;
+  for (let x = x0 - radio; x <= x0 + radio; x++) {
+    for (let y = y0 - radio; y <= y0 + radio; y++) {
+      if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
+      let distancia = dist(x0, y0, x, y);
+      if (distancia <= radio
+          && (grid[x][y] == 1 || grid[x][y] == 2)
+          && idYareta[x][y] == idRef) {
+        contador=contador+grid[x][y];
+      }
+    }
+  }
+  return contador;
+}
+
+
+// ============================================================
+// FUNCIONES MATEMÁTICAS DEL SEMILLADO
+// ============================================================
+
+function gauss(mu,sigma) {
+  let u1 = max(random(1), 1e-12);
+  let u2 = random(1);
+  let z0 = sqrt(-2 * log(u1)) * cos(TWO_PI * u2);
+  return mu + sigma * z0;
+}
+
+function ff(t,M,k,thetaLocal) {
+  return M / (1 + exp((thetaLocal - t) / k));
+}
+
+
+//=======================================================================================
+//Estadística fuerza
+//=======================================================================================
+
+function graficaFuerza(ph, t) {
+    fill(35);
+    rect(615, ph - 50, 70, 80);
+    stroke(150, 70, 0);
+    rect(615, ph - 30, 68, 30);
+    noStroke();
+    fill(150, 70, 0);
+    for (let i = 0; i < 17; i++) {
+        let j = t - (17 - i) * 12;
+        if (j >= 0) {
+            let h = int(fuerzaMensual[j] * 3);
+            rect(615 + 4 * i, ph - h, 4, h);
+        }
+    }
+    text("Vitalidad", 615, ph - 36);
+}
+
+//=======================================================================================
+//Clase Botones
+//=======================================================================================
+
+class Botones {
+    n;
+    lista;
+    nombres;
+    current;
+    constructor(numero) {
+        this.n = numero;
+        this.lista = Array.from(new Array(numero), () => new Array(5)); //x,y,x+dx,y+dy
+        this.nombres = new Array(numero);
+        this.current = 0;
+    }
+    CreaBoton(k, x, y, label) {
+        this.lista[k][0] = x;
+        this.lista[k][1] = y;
+        this.lista[k][2] = x + 68;
+        this.lista[k][3] = y + 30;
+        this.nombres[k] = label;
+    }
+    ActInBoton() {
+        for (let k = 0; k < this.n; k++) {
+            if (
+                mouseX < this.lista[k][2] &&
+                mouseX > this.lista[k][0] &&
+                mouseY < this.lista[k][3] &&
+                mouseY > this.lista[k][1]
+            ) {
+                this.current = k;
+                this.dibuja();
+                return k;
+            }
+        }
+        return -1;
+    }
+    dibuja() {
+        for (let k = 0; k < this.n; k++) {
+            noStroke();
+            if (k == this.current) fill(150, 100, 50);
+            else fill(200, 170, 250);
+            rect(
+                this.lista[k][0],
+                this.lista[k][1],
+                this.lista[k][2] - this.lista[k][0],
+                this.lista[k][3] - this.lista[k][1]
+            );
+            fill(0, 0, 0);
+            text(this.nombres[k], this.lista[k][0] + 10, this.lista[k][1] + 18);
+        }
+    }
+} //fin clase
+
+class Slider{
+   px;
+   py;
+   pc;
+   vmin;
+   vmax;
+   vc;
+   name;
+   lock;
+  constructor(x,y,m,M,c,s){
+   this.px=x;
+   this.py=y;
+   this.pc=x+68*(c-m)/(M-m);
+   this.vmin=m;
+   this.vmax=M;
+   this.vc=c;
+   this.lock=false;
+   this.name=s;
+  }
+
+  inSlider(){
+    if(
+    mouseX<this.pc+8 && 
+    mouseX>this.pc-8 && 
+    mouseY<this.py+16&&
+    mouseY>this.py
+    ){
+       return true;
+    }
+    return false; 
+  }
+  dibuja(){
+      noStroke();
+      // fondo
+      fill(35);
+      rect(this.px-2,this.py-16,74,56);
+      // barra
+      if(this.lock) fill(240,240,250);
+      else fill(100,170,250);
+      rect(this.px,this.py+6,68,4);
+      // slider
+      rect(this.pc-2,this.py,4,16);
+      // texto
+      text(this.name,this.px,this.py-6);
+      
+  }
+}//fin clase
+</script>
+</head>
+<body>
+<div class="game">
+  <aside class="side">
+    <p class="kicker">YARETA</p>
+    <h1>Una colonia que depende del agua</h1>
+    <p class="ins">La siguiente simulación representa el desarrollo de una colonia de organismos artificiales. Usa la palanca para ajustar la cantidad de agua disponible y visualizar cómo ésta los afecta. El cuadro bajo la palanca indica cómo evoluciona la vitalidad de los organismos. Cuando estos tienen el vigor y el tamaño suficiente, pueden lanzar esporas, pero si se vuelven demasiado viejos, ya no logran reproducirse y acaban por morir.</p>
+
+    <div class="stat vit">
+      <div class="lbl">Vitalidad media</div>
+      <div class="big"><span id="vit">–</span> <small id="vitWord"></small></div>
+      <div class="meter"><i id="vitBar" style="width:0;background:var(--vit)"></i></div>
+      <div class="scale"><span>0% · agotados</span><span>50%</span><span>100% · vigor máximo</span></div>
+      <p class="sub">Es el promedio del <b>vigor</b> de los organismos vivos. Con más vigor crecen más rápido, sus celdas mueren menos y lanzan más esporas. En el cuadro bajo la palanca, <b>cada barra es un año</b>: a la derecha el presente y a la izquierda hace 17 años.</p>
+      <p class="trend" id="trend">–</p>
+    </div>
+
+    <div class="stat wat">
+      <div class="lbl">Nivel de agua</div>
+      <div class="big" id="wat">–</div>
+      <p class="unit" id="sust"></p>
+      <p class="sub">Ajusta el agua con la palanca de la derecha. Lo que importa es cuánto cubre de lo que piden los organismos: si cubre más de la mitad, su vitalidad sube.</p>
+    </div>
+
+    <div class="nums">
+      <div><span>Vivos</span><b id="pop">0</b></div>
+      <div><span>Suelo cubierto</span><b id="cov">0%</b></div>
+    </div>
+
+    <div class="legend">
+      <span><i style="background:#966432"></i>suelo vacío</span>
+      <span><i style="background:#254522"></i>tejido vivo</span>
+      <span><i style="background:#123232"></i>centro (donde cayó la espora)</span>
+      <span><i style="background:#61552B"></i>tejido muerto</span>
+    </div>
+    <p class="sub">⏱ La simulación avanza de a un mes, pero calcula 12 meses por cuadro: pasan <b>décadas en pocos segundos</b>.</p>
+
+    <div class="spacer"></div>
+    <div class="foot">
+      <button class="b" id="reset">↺ Reiniciar la colonia</button>
+      <button class="linkbtn" id="storyBtn">🎬 Ver de nuevo la historia</button>
+    </div>
+  </aside>
+  <main class="view" id="view">
+    <span class="badge" id="badge">Año 0</span>
+    <div class="stage" id="stage">
+      <span class="ov w" id="ovW" style="left:87.9%;top:23.7%">–</span>
+      <span class="ov v" style="left:98%;top:30.1%">100%</span>
+      <span class="ov v" style="left:98%;top:32.6%">50%</span>
+      <span class="ov v" style="left:98%;top:35.1%">0%</span>
+      <span class="ov" style="left:87.9%;top:36.8%">hace 17 años → hoy</span>
+    </div>
+  </main>
+</div>
+
+<!-- portada -->
+<div class="intro" id="intro">
+  <canvas id="bg" width="200" height="200"></canvas>
+  <div class="card2">
+    <p class="kicker">YARETA</p>
+    <h2>Una planta que tarda <em>siglos</em> en crecer</h2>
+    <p><span class="line">En el altiplano andino, sobre los 4.000 metros, vive la <b>yareta</b>: un cojín verde tan apretado que parece una roca. </span><span class="line">Crece apenas uno o dos centímetros por año, y algunas tienen <b>más de mil años</b>. </span><span class="line">Para entender cómo vive, alguien tendría que observarla durante <b>vidas enteras</b>. </span><span class="line">Aquí verás <b>siglos en segundos</b>: cada segundo pasan décadas.</span></p>
+    <button class="go" id="playBtn">▶ Comenzar</button>
+  </div>
+  <button class="skip" id="skipBtn">Saltar historia</button>
+</div>
+
+<script>
+// Panel explicativo: solo lee las variables de la simulación, no la modifica.
+(function(){
+  const $ = id => document.getElementById(id);
+  const AREA = cols * rows;          // 40.000 celdas
+  const fmt = (v, d) => v.toLocaleString('es-CL', {minimumFractionDigits:d, maximumFractionDigits:d});
+  const view = $('view'), stage = $('stage');
+
+  function fit(){
+    const k = Math.max(0.2, Math.min((view.clientWidth - 32) / 700, (view.clientHeight - 32) / 600));
+    stage.style.width = 700 * k + 'px';
+    stage.style.height = 600 * k + 'px';
+    stage.style.setProperty('--k', k);
+  }
+  // p5 crea el lienzo al final de <body>; lo llevamos al escenario.
+  function adopt(){
+    const c = document.querySelector('canvas.p5Canvas');
+    if (!c) return requestAnimationFrame(adopt);
+    stage.prepend(c);
+    fit();
+  }
+  adopt();
+  addEventListener('resize', fit);
+
+  $('reset').onclick = () => iniciarCasoVisual();
+
+  // ---------- portada (la colonia crece de fondo; al comenzar se reinicia) ----------
+  const intro = $('intro'), lines = [...intro.querySelectorAll('.line')];
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let introOn = true, timers = [];
+  function openIntro(){
+    introOn = true; intro.classList.remove('gone');
+    lines.forEach(l => l.classList.remove('on')); $('playBtn').classList.remove('on');
+    timers.forEach(clearTimeout); timers = [];
+    if (agua) iniciarCasoVisual();
+    requestAnimationFrame(paintBg);
+    if (reduceMotion){ lines.forEach(l => l.classList.add('on')); $('playBtn').classList.add('on'); return; }
+    lines.forEach((l, k) => timers.push(setTimeout(() => l.classList.add('on'), 500 + k * 1700)));
+    timers.push(setTimeout(() => $('playBtn').classList.add('on'), 500 + lines.length * 1700));
+  }
+  function closeIntro(){
+    introOn = false; timers.forEach(clearTimeout);
+    intro.classList.add('gone');
+    MESES_POR_FRAME = 12;
+    if (agua) iniciarCasoVisual();
+  }
+
+  // Fondo de la portada (igual al de la v2): dibuja la colonia que crece detrás,
+  // a 10 años por segundo, leyendo el estado de la simulación.
+  const bg = $('bg'), bctx = bg.getContext('2d'), bimg = bctx.createImageData(cols, rows);
+  const soil = new Uint8ClampedArray(cols * rows * 3), grain = new Float32Array(cols * rows);
+  (function makeSoil(){
+    let s = 12345; const r = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    for (let x = 0; x < cols; x++) for (let y = 0; y < rows; y++){
+      const i = x * rows + y;
+      const n = Math.sin(x * 0.13 + Math.sin(y * 0.09) * 2) * 0.5 + Math.sin(y * 0.21 + x * 0.05) * 0.5;
+      let k = 1 + n * 0.05 + (r() - 0.5) * 0.10, c = [190, 152, 106];
+      if (r() < 0.025){ c = [214, 204, 186]; k = 0.9 + r() * 0.15; }
+      soil[i * 3] = c[0] * k; soil[i * 3 + 1] = c[1] * k; soil[i * 3 + 2] = c[2] * k;
+      grain[i] = 0.92 + Math.random() * 0.16;
+    }
+  })();
+  function same(x, y, id){ return x >= 0 && y >= 0 && x < cols && y < rows && grid[x][y] && grid[x][y] < 3 && idYareta[x][y] === id ? 1 : 0; }
+  function paintBg(){
+    if (!introOn) return;
+    requestAnimationFrame(paintBg);
+    if (!grid || !agua) return;
+    MESES_POR_FRAME = 2;
+    if (mesVisual > 12 * 400 || (mesVisual > 0 && contarYaretasVivas() === 0)) iniciarCasoVisual();
+    const d = bimg.data;
+    for (let x = 0; x < cols; x++) for (let y = 0; y < rows; y++){
+      const i = x * rows + y, p = (y * cols + x) * 4, g = grid[x][y];
+      let r, gg, b;
+      if (g === 1){
+        const id = idYareta[x][y], f = fuerza[id] / 10;
+        r = 167 - 120 * f; gg = 154 - 16 * f; b = 78 - 20 * f;
+        const sh = (0.72 + 0.07 * (same(x - 1, y, id) + same(x + 1, y, id) + same(x, y - 1, id) + same(x, y + 1, id))) * grain[i];
+        r *= sh; gg *= sh; b *= sh;
+      } else if (g === 2){ r = 244; gg = 232; b = 184; }
+      else if (g >= 3){ r = 112; gg = 106; b = 98; }
+      else { r = soil[i * 3]; gg = soil[i * 3 + 1]; b = soil[i * 3 + 2]; }
+      d[p] = r; d[p + 1] = gg; d[p + 2] = b; d[p + 3] = 255;
+    }
+    bctx.putImageData(bimg, 0, 0);
+  }
+  $('playBtn').onclick = closeIntro; $('skipBtn').onclick = closeIntro;
+  intro.addEventListener('click', e => { if (e.target.closest('button')) return; lines.forEach(l => l.classList.add('on')); $('playBtn').classList.add('on'); });
+  addEventListener('keydown', e => { if (introOn && (e.key === 'Enter' || e.code === 'Space')){ e.preventDefault(); closeIntro(); } });
+  $('storyBtn').onclick = openIntro;
+  openIntro();
+
+  function update(){
+    if (!agua || !grid) return;
+    const m = mesVisual;
+    const vivos = contarYaretasVivas();
+    let cubiertas = 0;
+    for (let x = 0; x < cols; x++) for (let y = 0; y < rows; y++) if (grid[x][y] == 1 || grid[x][y] == 2) cubiertas++;
+
+    $('badge').textContent = 'Año ' + Math.floor(m / 12).toLocaleString('es-CL');
+    $('pop').textContent = vivos.toLocaleString('es-CL');
+    $('cov').textContent = fmt(100 * cubiertas / AREA, 0) + '%';
+
+    // agua: nivel en % de la palanca y cuántas celdas sostiene
+    // (≈ 2W / 4,8: una celda de un organismo de ~10 años pide ~4,8 y la colonia se estabiliza con la mitad cubierta)
+    const pct = Math.round(100 * (agua.vc - agua.vmin) / (agua.vmax - agua.vmin));
+    const celdas = Math.round(2 * agua.vc / 4.8 / 10) * 10;
+    $('wat').textContent = pct + '%';
+    $('ovW').textContent = 'nivel ' + pct + '%';
+    $('sust').textContent = agua.vc < 1 ? 'No alcanza para sostener ningún organismo.' : 'Alcanza para sostener unas ' + celdas.toLocaleString('es-CL') + ' celdas de tejido vivo (' + fmt(100 * celdas / AREA, 1) + '% del terreno).';
+
+    const f = m > 0 ? fuerzaMensual[m - 1] : NaN;
+    const tr = $('trend');
+    if (vivos === 0 || !isFinite(f)) {
+      $('vit').textContent = '–'; $('vitWord').textContent = ''; $('vitBar').style.width = '0';
+      tr.className = 'trend down'; tr.textContent = 'La colonia se extinguió. Pulsa «Reiniciar la colonia».';
+      return;
+    }
+    const v = 10 * f;   // el vigor del código va de 0 a 10
+    $('vit').textContent = fmt(v, 0) + '%';
+    $('vitWord').textContent = v >= 80 ? 'vigorosos' : v >= 50 ? 'sanos' : v >= 20 ? 'débiles' : 'agotados';
+    $('vitBar').style.width = v + '%';
+    const cubre = Math.min(agua.vc / totalNecesidad, 1);
+    const pc = fmt(100 * cubre, 0) + '%';
+    if (cubre >= 0.5 && v >= 99.5) { tr.className = 'trend up'; tr.textContent = '● Al máximo: el agua cubre el ' + pc + ' de lo que piden.'; }
+    else if (cubre >= 0.5) { tr.className = 'trend up'; tr.textContent = '▲ Subiendo: el agua cubre el ' + pc + ' de lo que piden (sube si cubre más de la mitad).'; }
+    else { tr.className = 'trend down'; tr.textContent = '▼ Bajando: el agua cubre solo el ' + pc + ' de lo que piden (necesitan que cubra al menos la mitad).'; }
+  }
+  setInterval(update, 200);
+})();
+</script>
+</body>
+</html>
