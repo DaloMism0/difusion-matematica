@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ala del avión: vuelo eficiente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* v6: colores claros y la misma estructura que La ruta de la ambulancia y la Yareta (panel a la izquierda, vista a la derecha; en el celular, vista arriba) */
+  :root{--bg:#EEF2F6;--panel:#FFFFFF;--line:#E3E8EF;--ink:#1D2433;--muted:#6B778C;--accent:#1F6FD1;--accent-ink:#FFFFFF;--glow:rgba(31,111,209,0.28);--soft:rgba(31,111,209,0.09);--card:#F5F7FA;--track:#E8EDF3;--scrim:rgba(30,40,60,0.28);
+    --good:#2F9E5B;--good-ink:#23794A;--warn:#E39A12;--warn-ink:#A86400;--hot:#D9483B;--hot-ink:#B93A2C;--tunnel:#E9F2FA;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Inter','Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;}
+  [hidden]{display:none !important;}
+  .game{display:grid;grid-template-columns:360px 1fr;height:100vh;height:100dvh;min-height:560px;}
+  .side{position:relative;z-index:2;display:flex;flex-direction:column;gap:12px;padding:20px 20px 16px;background:var(--panel);border-right:1px solid var(--line);box-shadow:8px 0 30px rgba(20,30,50,0.06);overflow-y:auto;overflow-x:hidden;}
+  .kicker{font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:600;letter-spacing:0.16em;color:var(--accent);margin:0;}
+  .seg{display:grid;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;}
+  .seg.two{grid-template-columns:repeat(2,1fr);}
+  .seg button{border:none;background:transparent;border-radius:9px;padding:8px 4px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;line-height:1.2;touch-action:manipulation;}
+  .seg button small{display:block;font-size:10.5px;font-weight:500;opacity:0.8;}
+  .seg button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 4px rgba(20,30,50,0.12);}
+  .seg button.on small{color:var(--accent);opacity:1;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:23px;line-height:1.12;font-weight:700;margin:2px 0 0;letter-spacing:-0.01em;}
+  .ins{font-size:13.5px;line-height:1.5;color:var(--muted);margin:0;} .ins b{color:var(--ink);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;}
+  .lbl{font-size:11px;font-weight:600;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;}
+
+  /* eficiencia */
+  .ghead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+  .gpct{font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-0.02em;transition:opacity .2s;}
+  .gpct.dim{opacity:0.4;}
+  .gtrack{height:10px;border-radius:6px;background:var(--track);overflow:hidden;margin-top:8px;}
+  .gfill{height:100%;width:0%;border-radius:6px;background:linear-gradient(90deg,#C9D2DE,var(--accent),var(--good));transition:width .15s linear;}
+  .temp{font-size:13px;font-weight:600;line-height:1.4;margin:8px 0 0;min-height:18px;}
+  .lift{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);}
+  .lift .row{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--muted);}
+  .lift .row b{color:var(--ink);font-variant-numeric:tabular-nums;}
+  .ltrack{position:relative;height:10px;border-radius:6px;margin-top:7px;
+    background:linear-gradient(90deg,#F2B8B1 0 10%,#F7DDA8 10% 25%,#9ED7B3 25% 37.5%,#D3E3F5 37.5% 100%);}
+  #liftNeedle{position:absolute;top:-4px;width:5px;height:18px;margin-left:-2.5px;border-radius:3px;background:var(--ink);box-shadow:0 0 0 2px #fff;left:30%;transition:left .12s linear;}
+  .lscale{position:relative;height:15px;font-size:11px;color:var(--muted);margin-top:3px;}
+  .lscale span{position:absolute;top:0;white-space:nowrap;} .lscale span:nth-child(1){left:0;} .lscale span:nth-child(2){left:31.25%;transform:translateX(-50%);color:var(--good-ink);font-weight:600;} .lscale span:nth-child(3){right:0;}
+  .readout{font-size:12.5px;color:var(--muted);margin:6px 0 0;} .readout b{color:var(--ink);font-variant-numeric:tabular-nums;}
+
+  /* controles */
+  .ctrl + .ctrl{margin-top:10px;}
+  .chead{display:flex;align-items:center;justify-content:space-between;gap:8px;} .chead .lbl{white-space:nowrap;}
+  .step{display:flex;align-items:center;gap:2px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:2px;}
+  .step b{min-width:76px;text-align:center;font-family:'Space Grotesk',sans-serif;font-size:16px;font-variant-numeric:tabular-nums;}
+  .ob{width:32px;height:30px;border:none;border-radius:50%;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:var(--ink);font-family:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
+  .ob:hover{background:rgba(29,36,51,0.07);} .ob:active{background:rgba(29,36,51,0.12);}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:34px;background:transparent;margin:4px 0 0;cursor:pointer;touch-action:pan-y;}
+  input[type=range]::-webkit-slider-runnable-track{height:6px;background:var(--track);border-radius:3px;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 2px 8px rgba(20,30,50,0.25);}
+  input[type=range]::-moz-range-track{height:6px;background:var(--track);border-radius:3px;}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:3px solid #fff;box-shadow:0 2px 8px rgba(20,30,50,0.25);}
+  .marks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:-2px;}
+
+  /* vuelo */
+  .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .nums div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:7px 10px;min-width:0;}
+  .nums span{display:block;font-size:10px;font-weight:600;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .nums b{display:block;font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .side.free .chal-only, .side.chal .free-only{display:none;}
+  .msg{font-size:13px;line-height:1.4;color:var(--warn-ink);margin:0;min-height:18px;}
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  button.b{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;border-radius:12px;padding:11px 12px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);transition:transform .08s, filter .15s, opacity .15s;touch-action:manipulation;}
+  button.b:hover:not(:disabled){filter:brightness(0.97);} button.b:active:not(:disabled){transform:translateY(1px);}
+  button.b:disabled{opacity:0.4;cursor:not-allowed;}
+  button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:0 6px 20px var(--glow);}
+  button.primary:disabled{box-shadow:none;}
+  .btns .wide{grid-column:1/-1;}
+  .spacer{flex:1;}
+  .foot{display:flex;flex-wrap:wrap;gap:6px 18px;border-top:1px solid var(--line);padding-top:10px;}
+  .linkbtn{background:none;border:none;color:var(--muted);font-size:12.5px;text-decoration:underline;cursor:pointer;padding:0;text-align:left;font-family:inherit;}
+
+  /* vista */
+  .view{position:relative;overflow:auto;background:linear-gradient(180deg,#DCEBF6 0%,#EEF2F6 100%);display:flex;flex-direction:column;justify-content:center;gap:14px;padding:18px;min-width:0;min-height:0;}
+  .tunnel{position:relative;flex:none;align-self:center;width:min(100%, calc((100vh - 36px)*1100/520));border-radius:18px;overflow:hidden;background:var(--tunnel);box-shadow:0 20px 50px rgba(30,50,80,0.18);}
+  #c{display:block;width:100%;height:auto;aspect-ratio:1100/520;}
+  .pill{position:absolute;z-index:2;top:12px;right:12px;font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid transparent;white-space:nowrap;transition:background .2s,color .2s;}
+  .pill.static{position:static;}
+  .status-fly{background:#E6F5EC;color:var(--good-ink);border-color:#BFE3CC !important;}
+  .status-unstable{background:#FFF4E0;color:var(--warn-ink);border-color:#F5D9A6 !important;}
+  .status-fall{background:#FDECEA;color:var(--hot-ink);border-color:#F3C3BC !important;}
+
+  /* v7 — etapa 3: cabina en primera persona */
+  .seg.three{grid-template-columns:repeat(3,1fr);}
+  .cockpit{display:none;position:relative;flex:1;min-height:420px;border-radius:18px;overflow:hidden;background:#CBD5E1;box-shadow:0 20px 50px rgba(30,50,80,0.18);user-select:none;-webkit-user-select:none;touch-action:none;}
+  body.l2 .cockpit{display:block;} body.l2 .tunnel{display:none;}
+  #ck{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .ck-top{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:min(520px,calc(100% - 150px));display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;}
+  .route{width:100%;background:rgba(255,255,255,0.88);backdrop-filter:blur(8px);border-radius:999px;padding:6px 14px;display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;box-shadow:0 4px 14px rgba(30,40,60,0.12);}
+  .route .bar{flex:1;height:6px;border-radius:3px;background:var(--track);position:relative;}
+  .route .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--accent);}
+  .route .bar em{position:absolute;top:50%;transform:translate(-50%,-55%);font-style:normal;font-size:14px;}
+  .ck-warn{font-size:12.5px;font-weight:600;color:var(--warn-ink);background:rgba(255,244,224,0.95);border:1px solid #F5D9A6;border-radius:999px;padding:4px 12px;text-align:center;max-width:100%;}
+  .dash{position:absolute;left:0;right:0;bottom:0;height:27%;min-height:104px;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 92px 12px;}
+  .inst{flex:1;max-width:190px;min-width:0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px 10px;box-shadow:0 4px 12px rgba(30,40,60,0.10);text-align:center;}
+  .inst .lbl{font-size:10px;letter-spacing:0.1em;}
+  .inst b{display:block;font-family:'Space Grotesk',sans-serif;font-size:24px;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .inst small{display:block;font-size:11px;color:var(--muted);line-height:1.3;min-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .inst .mini{height:5px;border-radius:3px;background:var(--track);margin-top:4px;overflow:hidden;} .inst .mini i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#C9D2DE,var(--accent),var(--good));}
+  .lever{position:absolute;bottom:14px;width:64px;height:calc(100% - 110px);max-height:330px;display:flex;flex-direction:column;align-items:center;gap:5px;}
+  .lever.l{left:14px;} .lever.r{right:14px;}
+  .lever .nm{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;line-height:1.15;text-align:center;color:var(--ink);background:rgba(255,255,255,0.9);border-radius:10px;padding:2px 8px;white-space:nowrap;}
+  .lever .tr{position:relative;flex:1;width:44px;border-radius:22px;background:rgba(29,36,51,0.18);border:2px solid rgba(255,255,255,0.8);cursor:ns-resize;touch-action:none;}
+  .lever .tr i{position:absolute;left:4px;right:4px;bottom:4px;border-radius:18px;background:rgba(31,111,209,0.35);}
+  .lever .kn{position:absolute;left:50%;width:58px;height:38px;margin-left:-29px;margin-top:-19px;border-radius:12px;background:var(--accent);color:#fff;border:3px solid #fff;box-shadow:0 4px 12px rgba(20,30,50,0.3);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;pointer-events:none;}
+  .lever .ky{font-size:10.5px;color:var(--muted);background:rgba(255,255,255,0.9);border-radius:6px;padding:1px 6px;white-space:nowrap;}
+  .ck-go{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;border:none;border-radius:999px;padding:15px 34px;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 10px 30px var(--glow),0 0 0 8px rgba(255,255,255,0.4);}
+  .ck-go:hover{filter:brightness(1.08);}
+  .keys{font-size:12.5px;line-height:1.5;color:var(--muted);margin:0;} .keys kbd{font-family:'Space Grotesk',sans-serif;font-size:11.5px;background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;color:var(--ink);}
+  body.l2 #gaugeCard, body.l2 #ctrlCard, body.l2 #flNums, body.l2 #flMsg{display:none !important;}
+  @media (hover:none){ .lever .ky, .keys{display:none;} }
+
+  /* modales */
+  .modal{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .3s;}
+  .modal.show{opacity:1;pointer-events:auto;}
+  .res{width:min(440px,92%);max-height:92%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:24px 22px 18px;box-shadow:0 30px 80px rgba(20,30,50,0.3);transform:translateY(14px) scale(0.98);transition:transform .3s;text-align:center;}
+  .modal.show .res{transform:none;}
+  .res .medal{font-size:46px;line-height:1;}
+  .res h2{font-family:'Space Grotesk',sans-serif;font-size:22px;margin:10px 0 6px;line-height:1.2;}
+  .res p{margin:0 0 14px;color:var(--muted);font-size:14px;line-height:1.55;} .res p b{color:var(--ink);}
+  .rows{display:grid;gap:6px;text-align:left;margin:0 0 14px;}
+  .rows div{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--muted);background:var(--card);border-radius:10px;padding:7px 10px;}
+  .rows div b{color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;}
+  .rows div.me{background:var(--soft);} .rows div.me b{color:var(--accent);}
+  .note{font-size:13px !important;background:var(--card);border-radius:10px;padding:8px 10px;text-align:left;}
+  .res .btns{margin-top:4px;}
+  .res .linkbtn{grid-column:1/-1;text-align:center;margin-top:6px;}
+  .explain .res{text-align:left;width:min(680px,94%);}
+  .explain h3{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:18px 0 4px;color:var(--ink);} .explain h3:first-child{margin-top:0;}
+  .explain p{font-size:14px;text-align:left;color:var(--muted);line-height:1.55;margin:0 0 12px;}
+  .explain b{color:var(--ink);}
+  .explain code{font-family:'Space Grotesk',monospace;background:var(--card);border:1px solid var(--line);padding:1px 6px;border-radius:6px;color:var(--ink);font-size:13px;}
+  .explain .adv{margin:4px 0 14px;}
+  .explain .adv summary{display:inline-block;cursor:pointer;list-style:none;font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:3px;margin-bottom:10px;}
+  .explain .adv summary::-webkit-details-marker{display:none;}
+  .explain .adv summary::before{content:'▸ ';display:inline-block;transition:transform .15s;}
+  .explain .adv[open] summary::before{transform:rotate(90deg);}
+  .explain .close{display:flex;justify-content:flex-end;margin-top:6px;}
+
+  /* portada */
+  .intro{position:fixed;inset:0;z-index:50;background:linear-gradient(180deg,#D6E8F6 0%,#EEF2F6 100%);display:flex;align-items:center;justify-content:center;padding:24px 18px;overflow:hidden;transition:opacity .7s;}
+  .intro.gone{opacity:0;pointer-events:none;}
+  .intro #bg{position:absolute;inset:0;width:100%;height:100%;}
+  .intro .card2{position:relative;max-width:640px;text-align:center;padding:30px 28px 26px;border-radius:26px;background:radial-gradient(closest-side, rgba(238,242,246,0.96) 0%, rgba(238,242,246,0.9) 70%, rgba(238,242,246,0) 100%);}
+  .intro .kicker{margin-bottom:14px;}
+  .intro h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,5vw,46px);line-height:1.05;margin:0 0 18px;letter-spacing:-0.02em;font-weight:700;}
+  .intro h2 em{font-style:normal;color:var(--accent);}
+  .intro p{font-size:clamp(15px,1.9vw,18px);line-height:1.65;color:#4A5568;margin:0 0 26px;}
+  .intro p b{color:var(--ink);}
+  .intro .line{opacity:0;transition:opacity .9s;}
+  .intro .line.on{opacity:1;}
+  .intro .go{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;border:none;border-radius:999px;padding:16px 46px;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 10px 30px var(--glow);opacity:0;transform:scale(0.94);transition:opacity .8s, transform .8s, filter .15s;}
+  .intro .go.on{opacity:1;transform:none;} .intro .go:hover{filter:brightness(1.08);}
+  .intro .skip{position:absolute;bottom:16px;right:18px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;}
+
+  @media (max-width:860px){
+    html,body{overflow:auto;} .game{grid-template-columns:1fr;height:auto;min-height:0;}
+    /* en el celular: la vista arriba y, debajo, primero lo que se usa al jugar */
+    .view{order:1;padding:8px;gap:8px;justify-content:flex-start;overflow:visible;}
+    .tunnel{width:100%;border-radius:14px;box-shadow:0 10px 26px rgba(30,50,80,0.16);}
+    .pill{top:8px;right:8px;font-size:11.5px;padding:4px 10px;}
+    .side{order:2;padding:12px 14px 22px;gap:10px;border-right:none;border-top:1px solid var(--line);box-shadow:none;overflow:visible;}
+    .side > .kicker, .side h1{display:none;}
+    #stageSeg{order:1;} #modeSeg{order:2;} #flBtns{order:3;} .ins{order:4;} #keysHelp{order:4;} #gaugeCard{order:5;} #flMsg{order:6;} #ctrlCard{order:7;} #flNums{order:8;} #obsBox{order:5;} .spacer{order:9;display:none;} .foot{order:10;}
+    /* cabina en el celular: casi toda la pantalla, palancas para los pulgares */
+    .cockpit{flex:none;height:calc(100svh - 16px);min-height:480px;max-height:760px;border-radius:14px;}
+    .ck-top{top:8px;width:calc(100% - 16px);}
+    /* en el celular: parabrisas arriba; abajo, palancas a los lados (pulgares) e instrumentos al centro */
+    .dash{height:40%;min-height:0;padding:16px 84px 12px;gap:6px;flex-direction:column;align-items:stretch;justify-content:center;}
+    .inst{max-width:none;flex:none;padding:5px 8px;border-radius:12px;display:grid;grid-template-columns:auto 1fr;align-items:baseline;column-gap:8px;text-align:left;}
+    .inst .lbl{grid-row:1;} .inst b{font-size:19px;text-align:right;} .inst small,.inst .mini{grid-column:1/-1;} .inst small{font-size:10.5px;}
+    .lever{bottom:12px;height:calc(40% - 24px);max-height:none;width:62px;}
+    .lever.l{left:10px;} .lever.r{right:10px;}
+    .ck-go{top:30%;}
+    .gpct{font-size:28px;}
+    .intro .card2{padding:22px 14px;}
+  }
+</style>
+</head>
+<body>
+<div class="game">
+  <aside class="side free" id="side">
+    <p class="kicker">ALA DEL AVIÓN · VUELO EFICIENTE</p>
+    <div class="seg two" id="stageSeg">
+      <button data-l="1" class="on">Etapa 1<small>Túnel de viento</small></button>
+      <button data-l="2">Etapa 2<small>Cabina</small></button>
+    </div>
+    <div class="seg two" id="modeSeg" hidden>
+      <button data-mode="free" class="on">✈ Vuelo libre<small>sin reloj</small></button>
+      <button data-mode="chal">🏁 Desafío<small>Santiago → Lima</small></button>
+    </div>
+    <h1 id="title"></h1>
+    <p class="ins" id="ins"></p>
+
+    <div class="card" id="gaugeCard">
+      <div class="ghead"><span class="lbl" id="gaugeName">Eficiencia</span><span class="gpct" id="gaugePct">—</span></div>
+      <div class="gtrack"><div class="gfill" id="gaugeFill"></div></div>
+      <p class="temp" id="tempLabel">—</p>
+      <div class="lift" id="liftRow">
+        <div class="row"><span>Sustentación</span><b id="liftPct">—</b></div>
+        <div class="ltrack"><div id="liftNeedle"></div></div>
+        <div class="lscale"><span>se cae</span><span>justa ✓</span><span>sobra (gasta más)</span></div>
+        <p class="readout" id="calReadout">&nbsp;</p>
+      </div>
+    </div>
+
+    <div class="card" id="ctrlCard">
+      <div class="ctrl">
+        <div class="chead"><span class="lbl">Velocidad</span>
+          <span class="step"><button class="ob" id="velMinus" aria-label="Menos velocidad">−</button><b id="velVal">450 km/h</b><button class="ob" id="velPlus" aria-label="Más velocidad">+</button></span></div>
+        <input type="range" id="vel" min="280" max="650" value="450" step="1" aria-label="Velocidad">
+        <div class="marks"><span id="velMin">—</span><span id="velMax">—</span></div>
+      </div>
+      <div class="ctrl">
+        <div class="chead"><span class="lbl">Ángulo de ataque</span>
+          <span class="step"><button class="ob" id="aoaMinus" aria-label="Menos ángulo de ataque">−</button><b id="aoaVal">6,0°</b><button class="ob" id="aoaPlus" aria-label="Más ángulo de ataque">+</button></span></div>
+        <input type="range" id="aoa" min="0" max="12" value="6" step="0.1" aria-label="Ángulo de ataque">
+        <div class="marks"><span>nariz abajo</span><span>nariz arriba</span></div>
+        <p class="readout">Es el ángulo entre el ala y el aire que le llega. El ala va fija al avión: el piloto lo cambia subiendo o bajando la nariz.</p>
+      </div>
+    </div>
+
+    <p class="keys" id="keysHelp" hidden>En el computador: <kbd>W</kbd> <kbd>S</kbd> velocidad · <kbd>↑</kbd> <kbd>↓</kbd> ángulo de ataque (puedes usar las dos manos a la vez). También puedes arrastrar las palancas.</p>
+    <div class="btns" id="flBtns" hidden><button class="b primary" id="flStart">▶ Despegar</button><button class="b" id="flReset">↺ Reiniciar</button></div>
+    <p class="msg" id="flMsg" hidden></p>
+    <div class="nums" id="flNums" hidden>
+      <div><span>Altura</span><b id="flAlt">—</b></div>
+      <div><span>Velocidad</span><b id="flSpd">—</b></div>
+      <div><span>Ascenso</span><b id="flVs">—</b></div>
+      <div class="free-only"><span>Mach</span><b id="flMach">—</b></div>
+      <div class="free-only"><span>Rinde (100 kg)</span><b id="flSR" style="color:var(--accent)">—</b></div>
+      <div class="free-only"><span>Tu mejor</span><b id="flBest" style="color:var(--good-ink)">—</b></div>
+      <div class="chal-only"><span>Combustible</span><b id="flUsed" style="color:var(--accent)">—</b></div>
+      <div class="chal-only"><span>Recorrido</span><b id="flKm">—</b></div>
+      <div class="chal-only"><span>Horario</span><b id="flDeadline">—</b></div>
+      <div class="chal-only"><span>Tiempo</span><b id="flTime">—</b></div>
+      <div class="chal-only"><span>Mach</span><b id="flMach2">—</b></div>
+      <div class="chal-only"><span>Tu récord</span><b id="flRecord" style="color:var(--good-ink)">—</b></div>
+    </div>
+
+    <div class="spacer"></div>
+    <div class="foot">
+      <button class="linkbtn" id="explainBtn">Explicación matemática</button>
+    </div>
+  </aside>
+
+  <main class="view">
+    <div class="tunnel">
+      <canvas id="c" width="1100" height="520"></canvas>
+      <span class="pill status-fly" id="statusBadge">EN VUELO</span>
+    </div>
+    <div class="cockpit" id="cockpit">
+      <canvas id="ck"></canvas>
+      <div class="ck-top">
+        <div class="route" id="ckRoute"><span id="ckFrom">Santiago</span><span class="bar"><i id="ckProg"></i><em id="ckPlane">✈</em></span><span id="ckTo">Lima</span></div>
+        <div class="ck-warn" id="ckWarn" hidden></div>
+      </div>
+      <div class="dash">
+        <div class="inst"><span class="lbl">Altura</span><b id="ckAlt">0</b><small id="ckEq">pies</small></div>
+        <div class="inst"><span class="lbl">Eficiencia</span><b id="ckEff">—</b><div class="mini"><i id="ckEffBar" style="width:0"></i></div></div>
+        <div class="inst"><span class="lbl" id="ckThirdLbl">Combustible</span><b id="ckThird">—</b><small id="ckThirdSub"></small></div>
+      </div>
+      <div class="lever l" id="lvVel"><span class="nm">Velocidad</span><div class="tr"><i></i><div class="kn">460</div></div><span class="ky">W / S</span></div>
+      <div class="lever r" id="lvAoa"><span class="nm">Ángulo de<br>ataque</span><div class="tr"><i></i><div class="kn">6,0°</div></div><span class="ky">↑ / ↓</span></div>
+      <button class="ck-go" id="ckGo">▶ Despegar</button>
+    </div>
+  </main>
+</div>
+
+<!-- etapa 1 resuelta -->
+<div class="modal" id="solvedModal">
+  <div class="res">
+    <div class="medal">🏆</div>
+    <h2>¡Encontraste el punto óptimo!</h2>
+    <p id="solvedText"></p>
+    <div class="btns">
+      <button class="b" id="solvedWhy">Ver por qué</button><button class="b primary" id="solvedNext">Ir a la cabina ✈</button>
+      <button class="linkbtn" id="solvedStay">Seguir en el túnel</button>
+    </div>
+  </div>
+</div>
+
+<!-- meta del vuelo libre -->
+<div class="modal" id="goalModal">
+  <div class="res">
+    <div class="medal">🎯</div>
+    <h2>¡Meta cumplida: 95% de eficiencia!</h2>
+    <p id="goalText"></p>
+    <div class="btns">
+      <button class="b" id="goalStay">Seguir volando</button><button class="b primary" id="goalChal">Ir al desafío 🏁</button>
+    </div>
+  </div>
+</div>
+
+<!-- resultado del desafío -->
+<div class="modal" id="flModal">
+  <div class="res">
+    <div class="medal" id="rMedal"></div>
+    <h2 id="rTitle"></h2>
+    <p id="rText"></p>
+    <div class="rows" id="rRows"></div>
+    <p class="note" id="rNote"></p>
+    <div class="btns">
+      <button class="b" id="rWhy">Ver la explicación</button><button class="b primary" id="rAgain">↻ Volar de nuevo</button>
+      <button class="linkbtn" id="rClose">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- explicación -->
+<div class="modal explain" id="explain">
+  <div class="res">
+    <h3>Sostenerse cuesta combustible</h3>
+    <p>El ala sostiene al avión desviando aire hacia abajo. Esa fuerza, la <b>sustentación</b>, crece con la densidad del aire, con la velocidad al cuadrado y con el <b>ángulo de ataque</b>, el ángulo entre el ala y el aire que le llega. El ala va fija al fuselaje: el piloto cambia ese ángulo subiendo o bajando la nariz de todo el avión con el timón de profundidad, en la cola.</p>
+    <p><code>sustentación = ½ · densidad · velocidad² · área · C_L</code></p>
+    <p>Los motores gastan combustible para vencer la <b>resistencia del aire</b>, que tiene dos partes: el roce, que crece con la velocidad, y la resistencia "inducida", el precio de sostenerse, que crece con el ángulo. Lento, pagas ángulo; rápido, pagas roce. El mínimo está entre los dos: es lo que buscaste en el túnel.</p>
+
+    <h3>¿Por qué se vuela a unos 35.000 pies?</h3>
+    <p>Arriba el aire es más delgado: a 35.000 pies tiene menos de un tercio de la densidad del nivel del mar. Para sostenerse hay que ir <b>más rápido</b>, pero en el punto óptimo el avión gasta casi lo mismo por hora. Como recorre más kilómetros en esa hora, cada kilo de combustible lo lleva un 70% más lejos. No conviene subir sin límite: cerca de la velocidad del sonido aparecen <b>ondas de choque</b>, el ala empieza a <b>vibrar</b> y los <b>motores pierden empuje</b>. Por eso un 737 cruza entre unos 33.000 y 39.000 pies, según su peso; su techo es de 41.000.</p>
+
+    <h3>El óptimo se mueve</h3>
+    <p>Un avión más liviano puede subir más: a medida que quema combustible, el avión real sube por escalones. Las alas largas y delgadas sostienen con menos esfuerzo (por eso los planeadores las tienen enormes), pero pesan más y no caben en los aeropuertos.</p>
+
+    <h3 id="revealFlight">El desafío: gastar poco y llegar a tiempo</h3>
+    <p>Una aerolínea no busca gastar el mínimo de combustible, sino el mínimo <b>costo total</b>: el tiempo también cuesta (tripulación, mantención, pasajeros que pierden conexiones). Por eso pone un precio a cada minuto, el <i>Cost Index</i>, y el computador del avión elige una velocidad un poco mayor que la más económica. En el juego, ese precio del tiempo se reemplaza por un horario: el vuelo que menos combustible gasta tarda 3 h 13 min y hay que llegar en 3 h 10. Matemáticamente es lo mismo: una <b>optimización con restricción</b>, y el precio de un minuto es su multiplicador de Lagrange. Como cerca del óptimo el gasto casi no cambia, apurarse 3 minutos cuesta menos de 1% más.</p>
+
+    <details class="adv">
+      <summary>Explicación matemática avanzada</summary>
+      <p><b>Un modelo simplificado.</b> El juego resume el avión en pocas fórmulas: atmósfera estándar, sustentación <code>C_L</code> proporcional al ángulo de ataque y resistencia <code>C_D = C_D0 + K·C_L² + C_D,onda(M)</code>, con <code>K = 1/(π·e·A)</code> y <code>A = envergadura²/área</code>. Con eso, el rendimiento es <code>km por kg = velocidad / (c · peso · C_D/C_L)</code>, cuyo mejor valor está en <code>C_L = √(C_D0/K)</code> a cualquier altura; la altura solo cambia la velocidad necesaria, <code>V ∝ 1/√densidad</code>. Las cifras se aproximan a las de un Boeing 737-800; no hay viento, y el despegue, la subida hasta 10.000 pies y el descenso son estilizados.</p>
+      <p><b>Lo que hace la ingeniería de verdad.</b> Esos coeficientes fijos no salen de una fórmula. El aire alrededor de un ala obedece las <b>ecuaciones de Navier–Stokes</b>, que no se pueden resolver con lápiz y papel para un avión real. Se resuelven de forma aproximada en computadores (dinámica de fluidos computacional): el espacio se divide en millones de celdas y el flujo turbulento se representa con modelos. Los matemáticos han desarrollado mucha teoría para saber cuándo esas aproximaciones convergen a la solución y cuánto error tienen. Aun así, cada simulación exige mucho cálculo, y los resultados se contrastan con túneles de viento y vuelos de prueba. Ni siquiera se sabe si estas ecuaciones siempre tienen soluciones bien comportadas: es uno de los Problemas del Milenio.</p>
+    </details>
+    <p class="note"><b>¿Quieres saber más?</b> Busca «sustentación y resistencia aerodinámica», «perfil de Zhukovski», «Cost Index en aviación», «dinámica de fluidos computacional (CFD)» y «ecuaciones de Navier–Stokes, problema del milenio».</p>
+    <div class="close"><button class="b" id="explainClose">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- portada: la historia -->
+<div class="intro" id="intro">
+  <canvas id="bg"></canvas>
+  <div class="card2">
+    <p class="kicker">ALA DEL AVIÓN</p>
+    <h2>Cada <em>kilo</em> de combustible cuenta</h2>
+    <p><span class="line"><b>Un Boeing 737-800</b> quema unos 2.500 kg de combustible por hora. </span><span class="line">Cuánto gasta depende de su <b>velocidad</b>, del <b>ángulo con que el ala enfrenta al aire</b> y de la <b>altura</b> a la que vuela. </span><span class="line">Las aerolíneas lo calculan <b>con matemática</b> antes de cada vuelo. </span><span class="line">¿Puedes encontrar tú el vuelo más eficiente?</span></p>
+    <button class="go" id="playBtn">▶ Jugar</button>
+  </div>
+  <button class="skip" id="skipBtn">Saltar historia</button>
+</div>
+
+<script>
+(function(){
+  // ============================================================
+  // PART 1 — wind-flow visualization (Joukowski potential flow)
+  // ============================================================
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  // Coordenadas lógicas fijas (1100×520): todo el dibujo usa estas unidades.
+  const W_ = canvas.width, H_ = canvas.height;
+
+  // v2 — el búfer interno del canvas sigue al tamaño real en pantalla × devicePixelRatio,
+  // y una transformación escala las coordenadas lógicas. Antes el canvas se estiraba por CSS
+  // y se veía borroso en celulares y pantallas retina.
+  function fitCanvas(cv, cx, LW, LH){
+    // mínimo 1.5: en pantallas DPR 1 un leve sobremuestreo mantiene las líneas suaves
+    const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1.5), 2.5);
+    const cssW = cv.getBoundingClientRect().width;
+    if (!cssW) return false;
+    const w = Math.round(cssW*dpr), h = Math.round(cssW*dpr*LH/LW);
+    const changed = cv.width !== w || cv.height !== h;
+    if (changed){ cv.width = w; cv.height = h; }
+    cx.setTransform(w/LW, 0, 0, h/LH, 0, 0);
+    return changed;
+  }
+
+  const cAdd=(a,b)=>[a[0]+b[0],a[1]+b[1]];
+  const cSub=(a,b)=>[a[0]-b[0],a[1]-b[1]];
+  const cMul=(a,b)=>[a[0]*b[0]-a[1]*b[1], a[0]*b[1]+a[1]*b[0]];
+  const cDiv=(a,b)=>{const d=b[0]*b[0]+b[1]*b[1]; return [(a[0]*b[0]+a[1]*b[1])/d,(a[1]*b[0]-a[0]*b[1])/d];};
+  const cAbs=(a)=>Math.hypot(a[0],a[1]);
+
+  const e_=0.10, f_=0.09;
+  const C=[-e_, f_];
+  const r=Math.hypot(1+e_, f_);
+  const thetaTE=Math.atan2(-f_, 1+e_);
+
+  function zetaToZ(zeta){ return cAdd(zeta, cDiv([1,0], zeta)); }
+
+  const airfoilPts=[];
+  const NSEG=160;
+  for(let i=0;i<=NSEG;i++){
+    const th=(i/NSEG)*Math.PI*2;
+    const zeta=cAdd(C,[r*Math.cos(th), r*Math.sin(th)]);
+    airfoilPts.push(zetaToZ(zeta));
+  }
+
+  const scale=130;
+  const originX=W_*0.44, originY=H_*0.64;
+  function rotateZ(z, ang){
+    const c=Math.cos(ang), s=Math.sin(ang);
+    return [z[0]*c - z[1]*s, z[0]*s + z[1]*c];
+  }
+  // The flow is solved in the airfoil's own frame (chord along x, wind arriving
+  // at angle `alpha`). To make the WIND look horizontal on screen and instead
+  // show the WING pitching, we rotate every point by -alpha before projecting.
+  function toPx(z){
+    const rz = rotateZ(z, -alpha);
+    return [originX+rz[0]*scale, originY-rz[1]*scale];
+  }
+
+  let U=(450/3.6)/40, alphaDeg=6, alpha=alphaDeg*Math.PI/180, Gamma=0, UkmhGlobal=450;
+  function recomputeGamma(){ Gamma=4*Math.PI*U*r*Math.sin(alpha-thetaTE); }
+  recomputeGamma();
+
+  function velocityAt(zeta){
+    const zp=cSub(zeta,C);
+    const eNeg=[Math.cos(alpha),-Math.sin(alpha)];
+    const ePos=[Math.cos(alpha), Math.sin(alpha)];
+    const term1=[U*eNeg[0], U*eNeg[1]];
+    const zp2=cMul(zp,zp);
+    const r2overzp2=cDiv([r*r,0], zp2);
+    const term2=cMul([U*ePos[0],U*ePos[1]], r2overzp2);
+    const term3=cDiv([0, Gamma/(2*Math.PI)], zp);
+    const dwdzeta=cSub(cAdd(term1,term3), term2);
+    const Vzeta=[dwdzeta[0], -dwdzeta[1]];
+    const zeta2=cMul(zeta,zeta);
+    const invzeta2=cDiv([1,0], zeta2);
+    const dzdzeta=[1-invzeta2[0], -invzeta2[1]];
+    const dwdz=cDiv(dwdzeta, dzdzeta);
+    const Vz=[dwdz[0], -dwdz[1]];
+    return {Vzeta, Vz};
+  }
+
+  const N=320;
+  function cSqrt(a){
+    const rr=Math.hypot(a[0],a[1]);
+    const re=Math.sqrt((rr+a[0])/2);
+    let im=Math.sqrt(Math.max(0,(rr-a[0])/2));
+    if(a[1]<0) im=-im;
+    return [re, im];
+  }
+  function zToZeta(z){
+    // exact inverse of z = zeta + 1/zeta, i.e. zeta^2 - z*zeta + 1 = 0
+    const disc = cSub(cMul(z,z), [4,0]);
+    const sq = cSqrt(disc);
+    const zetaPlus  = [(z[0]+sq[0])/2, (z[1]+sq[1])/2];
+    const zetaMinus = [(z[0]-sq[0])/2, (z[1]-sq[1])/2];
+    const dPlus  = cAbs(cSub(zetaPlus, C));
+    const dMinus = cAbs(cSub(zetaMinus, C));
+    return dPlus>=dMinus ? zetaPlus : zetaMinus;  // the branch outside the circle
+  }
+  let particles=[];
+  function spawnOne(atEdge){
+    // Always use the EXACT inverse of the Joukowski map so the spawned zeta
+    // corresponds precisely to the intended screen pixel. (An earlier version
+    // used a cheap identity approximation for edge spawns; the small but
+    // systematic mismatch it introduced made freshly-spawned particles look
+    // "off-screen" again almost immediately, collapsing the whole flow.)
+    const px = atEdge ? -30 : Math.random()*W_;
+    const py = Math.random()*H_;
+    const rz=[(px-originX)/scale, (originY-py)/scale];
+    const zTarget = rotateZ(rz, alpha);
+    const zeta = zToZeta(zTarget);
+    if(cAbs(cSub(zeta,C)) < r*1.02){
+      // landed on/inside the wing itself (only possible for a random fill
+      // point) — just spawn at the inflow edge instead.
+      const py2 = Math.random()*H_;
+      const rz2=[(-30-originX)/scale, (originY-py2)/scale];
+      return {zeta: zToZeta(rotateZ(rz2, alpha)), prevPx:null};
+    }
+    return {zeta, prevPx:null};
+  }
+  function initParticles(){ particles=[]; for(let i=0;i<N;i++) particles.push(spawnOne(false)); }
+  initParticles();
+
+  // Safety net: regardless of *why* a vertical band of the screen might end
+  // up thin (drift, timing, device quirks), actively detect and correct it
+  // every second rather than trusting the flow to stay balanced on its own.
+  const BANDS = 8;
+  function spawnInBand(bandIdx){
+    const py = (bandIdx + Math.random()) * (H_/BANDS);
+    const px = Math.random()*W_;
+    const rz=[(px-originX)/scale, (originY-py)/scale];
+    const zeta = zToZeta(rotateZ(rz, alpha));
+    if(cAbs(cSub(zeta,C)) < r*1.02) return null;
+    return {zeta, prevPx:null};
+  }
+  function rebalanceParticles(){
+    const counts = new Array(BANDS).fill(0);
+    const idxByBand = Array.from({length:BANDS}, ()=>[]);
+    for(let i=0;i<particles.length;i++){
+      const zPos = zetaToZ(particles[i].zeta);
+      const p = toPx(zPos);
+      if(p[1]>=0 && p[1]<=H_){
+        const b = Math.min(BANDS-1, Math.floor(p[1]/H_*BANDS));
+        counts[b]++; idxByBand[b].push(i);
+      }
+    }
+    const expected = particles.length/BANDS;
+    for(let b=0;b<BANDS;b++){
+      if(counts[b] < expected*0.45){
+        // pull a couple of particles from the richest band into this one
+        let donor = 0;
+        for(let k=1;k<BANDS;k++) if(counts[k]>counts[donor]) donor=k;
+        const need = Math.ceil(expected*0.6) - counts[b];
+        for(let n=0; n<need && idxByBand[donor].length>0; n++){
+          const idx = idxByBand[donor].pop();
+          const fresh = spawnInBand(b);
+          if(fresh){ particles[idx] = fresh; counts[b]++; counts[donor]--; }
+        }
+      }
+    }
+  }
+
+  const dt=0.020;
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function speedColor(speed){
+    const ratio=Math.min(Math.max(speed/U,0.4),1.8);
+    const t=(ratio-0.4)/(1.8-0.4);
+    const c1=[47,127,216], c2=[227,154,18], c3=[217,72,59];   // v6: tonos más oscuros para fondo claro
+    let col;
+    if(t<0.5){ const tt=t/0.5; col=[lerp(c1[0],c2[0],tt),lerp(c1[1],c2[1],tt),lerp(c1[2],c2[2],tt)]; }
+    else{ const tt=(t-0.5)/0.5; col=[lerp(c2[0],c3[0],tt),lerp(c2[1],c3[1],tt),lerp(c2[2],c3[2],tt)]; }
+    return `rgb(${col[0]|0},${col[1]|0},${col[2]|0})`;
+  }
+  // v6 — sobre fondo claro: un halo ancho y tenue y un núcleo fino (sin mezcla aditiva, que aclaraba hacia el blanco)
+  function drawParticleSeg(prevPx,px,speed){
+    if(!prevPx) return;
+    const col = speedColor(speed);
+    ctx.strokeStyle=col;
+    ctx.beginPath(); ctx.moveTo(prevPx[0],prevPx[1]); ctx.lineTo(px[0],px[1]);
+    ctx.lineWidth=5; ctx.globalAlpha=0.06; ctx.stroke();
+    ctx.lineWidth=1.6; ctx.globalAlpha=0.85; ctx.stroke();
+  }
+  function stepFlow(){
+    for(const p of particles){
+      const zp=cSub(p.zeta,C);
+      if(cAbs(zp)<r*1.015){ Object.assign(p, spawnOne(true)); p.prevPx=null; continue; }
+      const k1=velocityAt(p.zeta).Vzeta;
+      const mid=cAdd(p.zeta,[k1[0]*dt/2, k1[1]*dt/2]);
+      const k2=velocityAt(mid);
+      const newZeta=cAdd(p.zeta,[k2.Vzeta[0]*dt, k2.Vzeta[1]*dt]);
+      const speed=cAbs(k2.Vz);
+      const zPos=zetaToZ(newZeta);
+      const px=toPx(zPos);
+      if(px[0]<-40 || px[0]>W_+40 || px[1]<-40 || px[1]>H_+40){
+        Object.assign(p, spawnOne(true)); p.prevPx=null; continue;
+      }
+      drawParticleSeg(p.prevPx, px, speed);
+      p.zeta=newZeta; p.prevPx=px;
+    }
+  }
+  const airfoilGrad = ctx.createLinearGradient(0, originY-60, 0, originY+60);
+  airfoilGrad.addColorStop(0,'#EDEFF2'); airfoilGrad.addColorStop(0.5,'#B9C0C8'); airfoilGrad.addColorStop(1,'#7A828E');
+  function drawAirfoil(){
+    ctx.save();
+    ctx.beginPath();
+    airfoilPts.forEach((z,i)=>{ const px=toPx(z); if(i===0) ctx.moveTo(px[0],px[1]); else ctx.lineTo(px[0],px[1]); });
+    ctx.closePath();
+    ctx.fillStyle=airfoilGrad; ctx.fill();
+    ctx.lineWidth=1.5; ctx.strokeStyle='#4A4E58'; ctx.stroke();
+    ctx.restore();
+  }
+  function drawFlowFrame(){
+    ctx.globalAlpha=1;
+    // v2 — desvanecido más lento (0.14 → 0.09): estelas más largas que dibujan las líneas de corriente
+    ctx.fillStyle='rgba(233,242,250,0.09)';
+    ctx.fillRect(0,0,W_,H_);
+    drawAirfoil();
+  }
+  function clearFlow(){ ctx.globalAlpha=1; ctx.fillStyle='#E9F2FA'; ctx.fillRect(0,0,W_,H_); }
+  fitCanvas(canvas, ctx, W_, H_);
+  clearFlow();
+
+  // ============================================================
+  // PART 2 — FÍSICA v4: modelo estándar de desempeño de un avión
+  // (polar de resistencia parabólica + atmósfera estándar), calibrado
+  // aproximadamente a un Boeing 737-800. Ver INFO.md / explicación.
+  // ============================================================
+  const alpha0Deg = thetaTE*180/Math.PI;     // ≈ −4,68°: ángulo "natural" del perfil (Joukowski)
+  const G = 9.81, SW = 124.6, E_OSW = 0.80, CD0 = 0.022, ALPHA_STALL = 15;
+  const FT = 0.3048;
+  function atm(h){                           // atmósfera estándar internacional (ISA)
+    let T, rho;
+    if (h <= 11000){ T = 288.15 - 0.0065*h; rho = 1.225*Math.pow(T/288.15, 4.2559); }
+    else { T = 216.65; rho = 0.3639*Math.exp(-(h-11000)/6341.6); }
+    return {T, rho, a: Math.sqrt(1.4*287.05*T)};
+  }
+  const AR = b => b*b/SW;                                          // alargamiento
+  const liftSlope = b => { const r = AR(b); return 4.10*(r/(r+2))/(9.45/11.45); };   // por radián
+  const Kind = b => 1/(Math.PI*E_OSW*AR(b));                      // factor de resistencia inducida
+  const CLmax = b => liftSlope(b)*(ALPHA_STALL+4.68+2)*Math.PI/180;
+  const wave = M => 20*Math.pow(Math.max(0, M-0.74), 4);          // resistencia de onda (cerca del sonido)
+  const tsfc = (h,M) => 0.0621*Math.sqrt(atm(h).T/288.15)*(0.75+0.4*M);   // kg de combustible por N·h
+  const Tmax = h => 2*121e3*0.85*Math.pow(atm(h).rho/1.225, 0.95);         // empuje máximo de los 2 motores
+  const CLbuf = M => (M < 0.6 ? 1.2 : 1.2 - 2.62*(M-0.6))/1.3;           // límite de vibración (buffet) con margen 1,3 g: se estrecha cerca del sonido
+  const VMO = h => Math.min(630/3.6/Math.sqrt(atm(h).rho/1.225), 0.82*atm(h).a);   // velocidad máxima (m/s)
+  // coeficiente de resistencia: roce + inducida + ondas de choque + castigo si el ala vibra (buffet)
+  const CDof = (CL, M, b) => CD0 + Kind(b)*CL*CL + wave(M) + (CL > CLbuf(M) ? 2*Math.pow(CL-CLbuf(M), 2) : 0);
+  function CLof(alphaDeg, b){
+    const x = alphaDeg - alpha0Deg;
+    if (alphaDeg <= ALPHA_STALL) return liftSlope(b)*x*Math.PI/180;
+    return Math.max(0.3, liftSlope(b)*(ALPHA_STALL-alpha0Deg)*Math.PI/180*(1 - (alphaDeg-ALPHA_STALL)/8));   // pérdida
+  }
+  // Vuelo nivelado con un CL dado: resistencia, consumo y rendimiento (km por kg)
+  function perf(V, h, CL, b){
+    const A = atm(h), q = 0.5*A.rho*V*V, M = V/A.a;
+    const D = q*SW*CDof(CL, M, b);
+    const ff = tsfc(h, M)*D;                // kg/h
+    return {D, M, q, ff, SR: V*3.6/ff};
+  }
+  // ¿Puede volar nivelado a (V,h) con peso W?  Devuelve el mejor rendimiento posible en ese punto
+  function levelOK(V, h, Wkg, b){
+    const A = atm(h), W = Wkg*G, q = 0.5*A.rho*V*V, CL = W/(q*SW), M = V/A.a;
+    if (CL > CLmax(b)*0.85 || CL > CLbuf(M) || V > VMO(h)+0.5) return null;
+    const p = perf(V, h, CL, b);
+    if (p.D + W*1.52/V > Tmax(h)) return null;   // debe quedar margen para subir 300 pies/min
+    return Object.assign(p, {CL, alpha: CL/liftSlope(b)*180/Math.PI + alpha0Deg});
+  }
+  const cacheAt = new Map(), cacheGlobal = new Map();
+  function bestAt(ft, Wkg, b){            // mejor (V, rendimiento) a una altura dada
+    const key = ft+'|'+Math.round(Wkg/500)+'|'+b;
+    if (cacheAt.has(key)) return cacheAt.get(key);
+    let best = null;
+    for (let v=60; v<320; v+=1){ const r = levelOK(v, ft*FT, Wkg, b); if (r && (!best || r.SR > best.SR)) best = Object.assign({V:v}, r); }
+    cacheAt.set(key, best); return best;
+  }
+  function bestGlobal(Wkg, b){            // mejor altura, velocidad y ángulo para ese peso y ala
+    const key = Math.round(Wkg/500)+'|'+b;
+    if (cacheGlobal.has(key)) return cacheGlobal.get(key);
+    let best = null;
+    for (let ft=0; ft<=43000; ft+=1000){ const r = bestAt(ft, Wkg, b); if (r && (!best || r.SR > best.SR)) best = Object.assign({ft}, r); }
+    cacheGlobal.set(key, best); return best;
+  }
+
+  // ============================================================
+  // PART 3 — interfaz común
+  // ============================================================
+  const $ = id => document.getElementById(id);
+  const velEl=$('vel'), aoaEl=$('aoa');
+  const gaugePct=$('gaugePct'), gaugeFill=$('gaugeFill'), gaugeName=$('gaugeName');
+  const tempLabel=$('tempLabel');
+  const fmtInt = n => Math.round(n).toLocaleString('es-CL');
+  const fmtDec = (n, d) => n.toFixed(d).replace('.', ',');
+  let level = 1;
+
+  let UkmhTarget = 450, alphaDegTarget = 6;
+  function setRange(min, max){
+    velEl.min = min; velEl.max = max;
+    $('velMin').textContent = min+' km/h'; $('velMax').textContent = max+' km/h';
+  }
+  function setFromSlider(){
+    UkmhTarget = parseFloat(velEl.value); $('velVal').textContent = UkmhTarget.toFixed(0)+' km/h';
+    alphaDegTarget = parseFloat(aoaEl.value); $('aoaVal').textContent = fmtDec(alphaDegTarget, 1)+'°';
+    if (!settingCtrl) touched = true;
+    if (typeof leversSync === 'function') leversSync();
+  }
+  velEl.addEventListener('input', setFromSlider); aoaEl.addEventListener('input', setFromSlider);
+  // touched: el jugador movió algún control (no cuenta cuando el juego los fija con setControls)
+  let touched = false, settingCtrl = false;
+  function setControls(v, a){ settingCtrl = true; velEl.value=v; aoaEl.value=a; setFromSlider(); settingCtrl = false; }
+  // v6: botones − y + para ajustar fino con el dedo (mantener apretado repite)
+  function stepper(btn, el, d){
+    let t1 = 0, t2 = 0;
+    const fire = () => { el.value = Math.min(+el.max, Math.max(+el.min, +el.value + d)); setFromSlider(); };
+    const stop = () => { clearTimeout(t1); clearInterval(t2); };
+    btn.addEventListener('pointerdown', e => { e.preventDefault(); stop(); fire(); t1 = setTimeout(() => { t2 = setInterval(fire, 70); }, 380); });
+    ['pointerup','pointerleave','pointercancel'].forEach(ev => btn.addEventListener(ev, stop));
+    btn.addEventListener('click', e => { if (e.detail === 0) fire(); });   // teclado
+    btn.addEventListener('contextmenu', e => e.preventDefault());
+  }
+  stepper($('velMinus'), velEl, -5); stepper($('velPlus'), velEl, 5);
+  stepper($('aoaMinus'), aoaEl, -0.1); stepper($('aoaPlus'), aoaEl, 0.1);
+
+  // la animación del túnel usa la "velocidad que siente el ala" (equivalente al nivel del mar)
+  let visualTAS = 450, visualRho = 1.225;
+  const EASE = 0.09;
+  function easeVisual(){
+    UkmhGlobal += (visualTAS*Math.sqrt(visualRho/1.225) - UkmhGlobal)*EASE;
+    alphaDeg   += (alphaDegTarget-alphaDeg)*EASE;
+    alpha = alphaDeg*Math.PI/180;
+    U = (UkmhGlobal/3.6)/40;
+    recomputeGamma();
+  }
+  function setBadge(cls, txt){ const el = $('statusBadge'); el.className = 'pill '+cls; el.textContent = txt; }
+  function setGauge(eff, label){
+    if(eff===null){ gaugePct.textContent='—'; gaugeFill.style.width='0%'; }
+    else { gaugePct.textContent=Math.round(eff*100)+'%'; gaugeFill.style.width=Math.max(0,Math.min(100,eff*100))+'%'; }
+    if(label) gaugeName.textContent = label;
+  }
+  function setTemp(text, color){ tempLabel.textContent = text; tempLabel.style.color = color; }
+  // modales: se cierran tocando fuera
+  const openModal = id => $(id).classList.add('show');
+  const closeModal = id => $(id).classList.remove('show');
+  document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }));
+
+  // ============================================================
+  // PART 4 — ETAPA 1: calibración en el túnel de viento
+  // ============================================================
+  // v5: el avión de la calibración queda fijo, como en las primeras versiones (737-800 lleno, a nivel del mar)
+  const cal = {b:34.3, W:79000, ft:0, solved:false, V:450, A:6, flying:false};
+  // Evaluación de la configuración. "wasFlying" agrega histéresis: si ya volaba, tolera bajar hasta 0,97
+  // antes de declarar que pierde estabilidad (así el juego no "salta" de golpe al rozar el límite).
+  function calState(V, aDeg, wasFlying){
+    const h = cal.ft*FT, A = atm(h), W = cal.W*G, q = 0.5*A.rho*V*V;
+    const CL = CLof(aDeg, cal.b), L = q*SW*CL, m = L/W, M = V/A.a;
+    const p = perf(V, h, CL, cal.b);
+    if (aDeg > ALPHA_STALL) return {st:'falling', why:'stall', m, p};
+    if (V > VMO(h)+0.5) return {st:'unstable', why:'over', m, p};
+    if (m < 0.88) return {st:'falling', why:'low', m, p};
+    if (m < (wasFlying ? 0.97 : 1.0)) return {st:'unstable', why:'lowish', m, p};
+    if (m > 2.3) return {st:'falling', why:'high', m, p};
+    if (m > 1.8) return {st:'unstable', why:'highish', m, p};
+    return {st:'flying', m, p, M};
+  }
+  const CAL_MSG = {
+    stall:'Ángulo excesivo: el aire se despega del ala (pérdida) y el avión cae',
+    over:'Sobrevelocidad: sobre la velocidad máxima, la estructura y las ondas de choque son un riesgo',
+    low:'El ala no genera suficiente sustentación: se cae',
+    lowish:'¡Ojo! La sustentación ya no alcanza: sube un poquito el ángulo o la velocidad',
+    high:'Demasiada velocidad y ángulo juntos: el ala pierde el control',
+    highish:'Demasiada sustentación: baja un poco la velocidad o el ángulo'
+  };
+  function calApplyParams(){
+    setRange(280, 650); setControls(450, 6);
+    cal.V = 450; cal.A = 6; cal.flying = true;
+    cal.solved = false;
+  }
+  function calUpdate(dt){
+    // v5: el avión responde con suavidad a los controles (como un avión real): los valores evaluados
+    // siguen a los sliders con una constante de tiempo de ~0,35 s, así hay tiempo de reaccionar a los avisos
+    const k = 1 - Math.exp(-dt/0.35);
+    cal.V += (UkmhTarget - cal.V)*k; cal.A += (alphaDegTarget - cal.A)*k;
+    const r = calState(cal.V/3.6, cal.A, cal.flying);
+    cal.flying = r.st==='flying';
+    visualTAS = cal.V; visualRho = atm(cal.ft*FT).rho;
+    const pos = Math.max(0, Math.min(100, (r.m - 0.8)/0.8*100));
+    $('liftNeedle').style.left = pos+'%'; $('liftPct').textContent = Math.round(r.m*100)+'% del peso';
+    const best = bestAt(cal.ft, cal.W, cal.b);
+    // la eficiencia nunca puede superar la del vuelo nivelado a esa velocidad (sustentación = peso):
+    // así la tolerancia del borde no "premia" volar con un poco menos de sustentación de la necesaria
+    const Vms = cal.V/3.6, CLreq = cal.W*G/(0.5*atm(cal.ft*FT).rho*Vms*Vms*SW);
+    const pLevel = perf(Vms, cal.ft*FT, Math.max(CLreq, CLof(cal.A, cal.b)), cal.b);
+    const eff = best ? Math.min(1, pLevel.SR/best.SR) : 0;
+    $('calReadout').innerHTML = `Rinde <b>${(r.p.SR*100).toFixed(0)} km</b> por cada 100 kg de combustible`;
+    if (r.st==='flying'){
+      cal.lastEff = eff;
+      setBadge('status-fly','EN VUELO'); setGauge(eff, 'Eficiencia de combustible'); gaugePct.classList.remove('dim');
+      let t;
+      if (eff>=0.98) t={text:'¡Caliente! Estás justo en el punto óptimo', color:'var(--good-ink)'};
+      else if (eff>=0.92) t={text:'Tibio: te estás acercando', color:'var(--accent)'};
+      else if (eff>=0.75) t={text:'Frío: todavía gastas bastante combustible', color:'var(--muted)'};
+      else t={text:'Helado: muy lejos de lo eficiente', color:'var(--hot-ink)'};
+      if (r.m < 1.03) t = {text: t.text+' · ⚠ en el borde: la sustentación casi no alcanza', color: t.color};
+      setTemp(t.text, t.color);
+      if (eff>=0.98 && !cal.solved){
+        cal.solved=true;
+        $('solvedText').innerHTML = `A <b>${fmtInt(cal.V)} km/h</b> y <b>${fmtDec(cal.A,1)}°</b> el avión rinde ${(r.p.SR*100).toFixed(0)} km por cada 100 kg. Más lento o más rápido, gasta más. ¿Y a 35.000 pies? Pruébalo en la cabina.`;
+        setTimeout(()=>{ if (level===1) openModal('solvedModal'); }, 500);
+      }
+    } else if (r.st==='unstable'){
+      // v5: ya no cae a 0 de golpe: queda congelado (atenuado) el último valor válido mientras el avión empieza a bajar
+      setBadge('status-unstable', r.why==='over'?'SOBREVELOCIDAD':'PERDIENDO ALTURA'); setGauge(cal.lastEff ?? 0, 'Eficiencia (en pausa)'); gaugePct.classList.add('dim');
+      setTemp(CAL_MSG[r.why], 'var(--warn-ink)');
+    } else {
+      setBadge('status-fall','SE CAE'); setGauge(null, 'Eficiencia de combustible'); gaugePct.classList.remove('dim');
+      setTemp(CAL_MSG[r.why], 'var(--hot-ink)');
+    }
+  }
+
+  // ============================================================
+  // PART 5 — ETAPA 2: vuelo libre y desafío Santiago → Lima
+  // ============================================================
+  const ROUTE = 2460, OEW = 62000, FUEL0 = 14000, B_FLT = 34.3;
+  let flMode = 'free';                // 'free' = vuelo libre · 'chal' = desafío Santiago → Lima con horario
+  const TS = () => flMode==='chal' ? 180 : 60;   // segundos de vuelo por segundo real (desafío: 1 s = 3 min)
+  const FREE_FUEL = 8000;             // en vuelo libre el peso se mantiene en 70 t (el combustible no se acaba)
+  const DEADLINE_MIN = 190;           // desafío: 3 h 10 min. El vuelo más económico tarda ~3 h 13 min; el mejor a tiempo va a ~850 km/h (Mach 0,80).
+                                      // v12: con 3 h 07 el mejor a tiempo iba a Mach 0,82, la velocidad máxima del 737: poco realista
+  const SPEED_LIMIT_10K = 463;        // km/h (250 nudos) bajo 10.000 pies
+  const fl = {};
+  const AUTO_CLIMB_DEG = 7.5, GOAL_HOLD = 4;   // ángulo del piloto automático en la subida; segundos (reales) que hay que sostener el 95%
+  function flReset(){
+    Object.assign(fl, {phase:'ready', h:0, V:0, x:0, fuel: flMode==='free' ? FREE_FUEL : FUEL0, used:0, t:0, gam:0, prof:[], warn:'', tPhase:0, maxFt:0, result:null, best:0, M:0, ff:0, vs:0});
+    setRange(250, 950); setControls(460, 6);
+    $('side').classList.toggle('free', flMode==='free'); $('side').classList.toggle('chal', flMode==='chal');
+    document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.mode===flMode));
+    ck.runway = 0; ck.pitch = 0; worldReset();
+    $('title').textContent = 'Cabina · ' + (flMode==='free' ? 'Vuelo libre' : 'Santiago → Lima en 3 h 10 min');
+    $('ins').innerHTML = flMode==='chal'
+      ? 'Llega a Lima en <b>3 h 10 min</b> o menos gastando el mínimo de combustible. <b>El despegue, la subida hasta 10.000 pies y el descenso son automáticos</b>: tú decides cuánto más subir y a qué velocidad cruzar.'
+      : '<b>Meta: volar con 95% de eficiencia</b> (mantenlo unos segundos). El despegue y la subida hasta 10.000 pies son automáticos; después mandas tú. El combustible no se acaba.';
+    fl.goalT = 0; fl.goalDone = false; fl.msgT = 0; touched = false;
+    $('flStart').disabled = false; $('flStart').textContent = '▶ Despegar';
+    $('flMsg').textContent = 'Despegue y subida hasta 10.000 pies: automáticos. Ya puedes elegir velocidad y ángulo de ataque.'; closeModal('flModal'); closeModal('goalModal');
+    $('flRecord').textContent = record() ? fmtInt(record())+' kg' : '—';
+    flPanel();
+  }
+  const recKey = () => 'ala-v12-record-desafio';   // v12: el horario cambió, los récords anteriores no son comparables
+  document.querySelectorAll('#modeSeg button').forEach(b=>b.addEventListener('click', ()=>{ flMode = b.dataset.mode; flReset(); }));
+  function record(){ try { return +localStorage.getItem(recKey()) || 0; } catch(e){ return 0; } }
+  function saveRecord(v){ try { localStorage.setItem(recKey(), String(Math.round(v))); } catch(e){} }
+  $('flStart').addEventListener('click', ()=>{
+    if (fl.phase==='ready'){ fl.phase='takeoff'; fl.tPhase=0; $('flStart').textContent='En vuelo…'; $('flStart').disabled=true; }
+    else if (fl.phase==='done') flReset();
+  });
+  $('flReset').addEventListener('click', flReset);
+
+  // Un paso de dt segundos: el acelerador automático busca la velocidad pedida (con el empuje máximo como tope)
+  // y la trayectoria se curva según sustentación − peso. Devuelve un aviso para el jugador (o '').
+  function physStep(s, VtKmh, al, dt){
+    const Wkg = OEW + s.fuel, W = Wkg*G, h = s.h, A = atm(h);
+    let Vt = VtKmh/3.6, warn = '';
+    // regla de tránsito aéreo: bajo 10.000 pies, máximo 250 nudos de velocidad INDICADA (la que marca el instrumento)
+    const Vlim = SPEED_LIMIT_10K/3.6/Math.sqrt(A.rho/1.225);
+    if (h/FT < 10000 && Vt > Vlim){ Vt = Vlim; warn = 'Bajo 10.000 pies: máximo 250 nudos indicados (463 km/h en el instrumento)'; }
+    if (Vt > VMO(h)){ Vt = VMO(h); warn = 'Velocidad máxima del avión a esta altura'; }
+    const CL = CLof(al, B_FLT), q = 0.5*A.rho*s.V*s.V, L = q*SW*CL, M = s.V/A.a;
+    const D = q*SW*CDof(CL, M, B_FLT);
+    const Tm = Tmax(h);
+    const Th = Math.max(0.06*Tm, Math.min(Tm, D + W*Math.sin(s.gam) + Wkg*0.5*(Vt - s.V)));
+    if (Th >= Tm*0.999 && s.V < Vt - 3) warn = warn || 'Motores al máximo: no alcanzan para subir y mantener la velocidad';
+    if (al > ALPHA_STALL) warn = '¡Pérdida! Ángulo excesivo: el ala deja de sustentar';
+    else if (CL > CLbuf(M)) warn = warn || 'El ala vibra (buffet): demasiado alto para este ángulo y velocidad. Gasta más.';
+    if (h/FT > 41000) warn = warn || 'Sobre 41.000 pies: más alto que el techo certificado del 737';
+    s.V = Math.max(60, s.V + (Th - D - W*Math.sin(s.gam))/Wkg*dt);
+    const om = Math.sqrt(G/7000);       // el piloto automático amortigua las oscilaciones de altura
+    s.gam = Math.max(-0.1, Math.min(0.21, s.gam + ((L - W*Math.cos(s.gam))/(Wkg*s.V) - 1.4*om*s.gam)*dt));
+    s.h = Math.max(300, s.h + s.V*Math.sin(s.gam)*dt);
+    const ff = tsfc(h, M)*Th;           // kg/h
+    s.fuel -= ff/3600*dt; s.used += ff/3600*dt;
+    s.x += s.V*Math.cos(s.gam)*dt/1000; s.t += dt;
+    s.ff = ff; s.M = M; s.vs = s.V*Math.sin(s.gam); s.maxFt = Math.max(s.maxFt||0, s.h/FT);
+    return warn;
+  }
+  function flStepSim(dt){ fl.warn = physStep(fl, UkmhTarget, alphaDegTarget, dt); }
+  function flTick(dtReal){
+    if (fl.phase==='ready' || fl.phase==='done') return;
+    const dtSim = Math.min(0.25, dtReal)*TS();
+    if (fl.phase==='takeoff'){      // despegue automático hasta 3.000 pies
+      fl.tPhase += dtReal;
+      const k = Math.min(1, fl.tPhase/2.2);
+      fl.h = 914*k*k; fl.V = (150 + 180*k)/3.6; fl.x = 10*k; fl.t = 300*k; fl.used = fl.fuel0Used = 350*k; fl.fuel = FUEL0 - fl.used;
+      fl.gam = 0.08; fl.ff = 0; fl.vs = 0;
+      $('flMsg').textContent = 'Piloto automático: despegue…';
+      if (flMode==='free') fl.fuel = FREE_FUEL;
+      if (k>=1){ fl.phase='auto'; fl.V = 330/3.6; fl.gam = 0.02; }
+    } else if (fl.phase==='auto'){   // v10: el piloto automático sube hasta 10.000 pies; ahí la velocidad está limitada por reglamento
+      let n = Math.ceil(dtSim/1.0); const d = dtSim/n;
+      for (let i=0;i<n && fl.h < 3048;i++){ physStep(fl, 999, AUTO_CLIMB_DEG, d); if (flMode==='free') fl.fuel = FREE_FUEL; }
+      $('flMsg').textContent = 'Piloto automático: subiendo a 10.000 pies… ('+fmtInt(fl.h/FT)+')';
+      if (fl.h >= 3048){
+        fl.phase='fly'; fl.msgT = 3;
+        // si el jugador no preparó los controles, se los entrega como iba el piloto automático: subiendo
+        if (!touched) setControls(Math.round(fl.V*3.6/5)*5, AUTO_CLIMB_DEG);
+        $('flMsg').textContent = 'Desde 10.000 pies mandas tú: elige cuánto subir y a qué velocidad.';
+      }
+    } else if (fl.phase==='fly'){
+      let n = Math.ceil(dtSim/1.0); const d = dtSim/n;
+      for (let i=0;i<n;i++){
+        flStepSim(d);
+        if (flMode==='free'){ fl.fuel = FREE_FUEL; continue; }   // vuelo libre: sin fin y sin quemar peso
+        const dDesc = 3*(fl.h/FT)/1000*1.852;   // regla 3:1 — 3 millas náuticas por cada 1.000 pies
+        if (ROUTE - fl.x <= dDesc){ fl.phase='descent'; fl.descFt = fl.h/FT; fl.descX = fl.x; break; }
+        if (fl.fuel <= 0){ flEnd(false); return; }
+      }
+      if (fl.msgT > 0) fl.msgT -= dtReal;
+      if (fl.phase==='fly' && (fl.warn || fl.msgT <= 0)) $('flMsg').textContent = fl.warn;
+      // meta del vuelo libre: 95% de eficiencia, casi nivelado, durante GOAL_HOLD segundos seguidos
+      if (flMode==='free' && !fl.goalDone){
+        const e = effNow();
+        fl.goalT = e !== null && e >= 0.95 && Math.abs(fl.vs || 0) < 1.5 ? fl.goalT + dtReal : 0;
+        if (fl.goalT >= GOAL_HOLD){
+          fl.goalDone = true;
+          $('goalText').innerHTML = `Volaste a <b>${fmtInt(fl.h/FT)} pies</b> y <b>${fmtInt(fl.V*3.6)} km/h</b>: ahí cada 100 kg de combustible llevan al avión ${(fl.V*3.6/fl.ff*100).toFixed(0)} km. ¿Te atreves a cruzar de Santiago a Lima a tiempo?`;
+          openModal('goalModal');
+        }
+      }
+    } else if (fl.phase==='descent'){    // descenso automático a 2.000 pies/min con motores casi en ralentí
+      const dt = dtSim, rate = 2000*FT/60;
+      fl.h = Math.max(0, fl.h - rate*dt);
+      const frac = 1 - fl.h/(fl.descFt*FT);
+      fl.x = fl.descX + (ROUTE - fl.descX)*frac; fl.t += dt; fl.used += 8/60*dt; fl.fuel -= 8/60*dt;
+      fl.V = Math.max(75, fl.V - 0.4*dt); fl.vs = -rate; fl.ff = 480; fl.gam = -0.05;
+      $('flMsg').textContent = 'Descenso automático hacia Lima…';
+      if (fl.h <= 0){ fl.t += 300; flEnd(true); }
+    }
+    if (fl.phase!=='done' && (fl.prof.length===0 || fl.x - fl.prof[fl.prof.length-1][0] > 6)) fl.prof.push([fl.x, fl.h/FT, effNow()]);
+    if (flMode==='free') while (fl.prof.length > 2 && fl.prof[1][0] < fl.x - 1510) fl.prof.shift();
+    flPanel();
+  }
+  function effNow(){
+    if (fl.phase!=='fly' || !fl.ff) return null;
+    const bg = bestGlobal(OEW+fl.fuel, B_FLT);
+    return Math.min(1, (fl.V*3.6/fl.ff)/bg.SR);
+  }
+  // PILOTO MATEMÁTICO: prueba cientos de vuelos completos con el MISMO simulador del jugador
+  // (ángulo de subida, velocidad y ángulo de crucero) y se queda con el mejor. Sin trampas.
+  function simFlight(ac, Vc, acr){
+    const s = {h:914, V:330/3.6, x:10, fuel:FUEL0-350, used:350, t:300, gam:0.02, maxFt:0}, dt = 3;
+    while (s.x < ROUTE){
+      if (ROUTE - s.x <= 3*(s.h/FT)/1000*1.852) break;
+      if (s.fuel <= 0) return null;
+      physStep(s, s.h < 3048 ? 999 : Vc, s.h < 3048 ? ac : acr, dt);   // bajo 10.000 pies, lo más rápido que permite la regla
+    }
+    const tdesc = (s.h/FT)/2000*60;
+    return {used: s.used + tdesc*8/60, min: (s.t + tdesc + 300)/60, Vc, acr, ac};
+  }
+  let refCache = null;
+  function refFlights(){
+    if (refCache) return refCache;
+    let eco = null, onTime = null;
+    for (const ac of [AUTO_CLIMB_DEG]) for (let Vc=760; Vc<=900; Vc+=10) for (let acr=2.0; acr<=4.61; acr+=0.2){
+      const r = simFlight(ac, Vc, +acr.toFixed(1)); if (!r) continue;
+      if (!eco || r.used < eco.used) eco = r;
+      if (r.min <= DEADLINE_MIN && (!onTime || r.used < onTime.used)) onTime = r;
+    }
+    return refCache = {eco, onTime};
+  }
+  const refFlight = () => refFlights().onTime;
+  function fmtTime(sec){ const m = Math.round(sec/60), h = Math.floor(m/60); return h+' h '+String(m%60).padStart(2,'0')+' min'; }
+  function flEnd(arrived){
+    fl.phase = 'done'; $('flStart').disabled = false; $('flStart').textContent = '↻ Volar de nuevo'; $('flMsg').textContent = '';
+    const ref = refFlight(), eco = refFlights().eco, mins = fl.t/60, late = mins > DEADLINE_MIN + 0.5;
+    const valid = arrived && !late;
+    let isRec = false;
+    if (valid){ const r = record(); if (!r || fl.used < r){ saveRecord(fl.used); isRec = true; } }
+    const pct = fl.used/ref.used - 1;
+    const rank = pct <= 0.01 ? ['🏆','Piloto matemático'] : pct <= 0.03 ? ['🥇','Comandante'] : pct <= 0.08 ? ['🥈','Primer oficial'] : ['🥉','Piloto en formación'];
+    $('flRecord').textContent = record() ? fmtInt(record())+' kg' : '—';
+    // v6: el resultado aparece en una ventana, como en los otros juegos
+    if (!arrived){ $('rMedal').textContent = '⛽'; $('rTitle').textContent = 'Te quedaste sin combustible'; $('rText').innerHTML = 'El avión no alcanzó a llegar a Lima. Prueba volar más alto: arriba rinde mucho más.'; }
+    else if (late){ $('rMedal').textContent = '⏰'; $('rTitle').textContent = `Llegaste ${Math.round(mins-DEADLINE_MIN)} min tarde`; $('rText').innerHTML = 'Muchos pasajeros pierden sus conexiones. El vuelo <b>no cuenta</b> para el récord.'; }
+    else { $('rMedal').textContent = rank[0]; $('rTitle').textContent = rank[1] + (isRec ? ' · ¡Nuevo récord!' : ''); $('rText').innerHTML = `¡Aterrizaste en Lima a tiempo! Usaste <b>${fmtInt(fl.used)} kg</b> de combustible` + (pct > 0.001 ? `, un ${fmtDec(pct*100,1)}% más que el piloto matemático.` : ', tanto como el piloto matemático.'); }
+    $('rRows').innerHTML = `
+      <div class="me"><span>Tu vuelo</span><b>${fmtInt(fl.used)} kg · ${fmtTime(fl.t)}</b></div>
+      <div><span>Piloto matemático</span><b>${fmtInt(ref.used)} kg · ${fmtTime(ref.min*60)}</b></div>
+      <div><span>Tu altura máxima</span><b>${fmtInt(fl.maxFt)} pies</b></div>`;
+    $('rNote').innerHTML = `El vuelo más económico de todos usa ${fmtInt(eco.used)} kg, pero tarda ${fmtTime(eco.min*60)}: llega tarde. Con horario, la pregunta cambia: ¿cuál es el vuelo más barato <b>que llega a tiempo</b>?`;
+    setTimeout(()=>openModal('flModal'), 300);
+  }
+  $('goalStay').addEventListener('click', ()=>closeModal('goalModal'));
+  $('goalChal').addEventListener('click', ()=>{ closeModal('goalModal'); flMode = 'chal'; flReset(); });
+  $('rAgain').addEventListener('click', ()=>{ closeModal('flModal'); flReset(); });
+  $('rClose').addEventListener('click', ()=>closeModal('flModal'));
+  $('rWhy').addEventListener('click', ()=>{ closeModal('flModal'); openExplain(true); });
+  function flPanel(){
+    $('flAlt').textContent = fmtInt(fl.h/FT)+' pies';
+    $('flSpd').textContent = fmtInt(fl.V*3.6)+' km/h';
+    $('flMach').textContent = $('flMach2').textContent = fl.M ? fmtDec(fl.M, 2) : '—';
+    $('flVs').textContent = fl.vs ? (fl.vs>0?'+':'')+fmtInt(fl.vs/FT*60)+' p/min' : '—';
+    $('flUsed').textContent = fmtInt(fl.used)+' kg';
+    $('flKm').textContent = fmtInt(fl.x)+' km';
+    $('flTime').textContent = fmtTime(fl.t);
+    { const left = DEADLINE_MIN*60 - fl.t; $('flDeadline').textContent = left>=0 ? 'quedan '+fmtTime(left) : 'atraso '+fmtTime(-left); $('flDeadline').style.color = left>=0 ? 'var(--ink)' : 'var(--hot-ink)'; }
+    const e = effNow();
+    if (e!==null && Math.abs(fl.vs||0) < 1.5) fl.best = Math.max(fl.best||0, e);   // mejor eficiencia en vuelo nivelado
+    $('flSR').textContent = fl.ff && fl.phase==='fly' ? (fl.V*3.6/fl.ff*100).toFixed(0)+' km' : '—';
+    $('flBest').textContent = fl.best ? Math.round(fl.best*100)+'%' : '—';
+    if (level>=2){
+      gaugePct.classList.remove('dim');
+      setGauge(e===null ? null : Math.max(0,e), 'Eficiencia en este instante');
+      const st = fl.warn.startsWith('¡Pérdida') ? ['status-fall','PÉRDIDA'] : fl.phase==='takeoff' ? ['status-unstable','DESPEGUE'] : fl.phase==='auto' ? ['status-unstable','SUBIDA AUTOMÁTICA'] : fl.phase==='descent' ? ['status-unstable','DESCENSO'] : fl.phase==='fly' ? ['status-fly','EN VUELO'] : fl.phase==='done' ? ['status-fly','EN LIMA'] : ['status-unstable','EN TIERRA'];
+      setBadge(st[0], st[1]);
+      setTemp(fl.phase==='fly' ? (fl.vs > 2 ? 'Subiendo: ganar altura cuesta combustible, pero arriba rinde mucho más.' : e>=0.97 ? '¡Excelente rendimiento!' : e>=0.9 ? 'Buen rendimiento' : 'Se puede rendir más: ¿altura? ¿velocidad?') : fl.phase==='ready' ? 'Elige velocidad y ángulo, y despega.' : '', 'var(--muted)');
+      visualTAS = fl.V*3.6 || 300; visualRho = atm(fl.h).rho;
+    }
+  }
+  // ============================================================
+  // PART 5b — v7: ETAPA 3, el mismo vuelo visto desde la cabina
+  // ============================================================
+  // Mundo 3D proyectado a mano (sin librerías). La cámara está en (0, h, 0) y mira hacia adelante (+z);
+  // x positivo = derecha. En el desafío se vuela al norte por la costa (mar a la izquierda, Andes a la
+  // derecha); en el vuelo libre, al sur (mar a la derecha). Suelo, montañas y nubes pasan a una velocidad
+  // visual (VIS veces la real) y nacen en el horizonte con el bioma del tramo que viene.
+  const ckCv = $('ck'), ckx = ckCv.getContext('2d');
+  let CW = 0, CH = 0;
+  const ZFAR = 90000, MFAR = 300000;
+  // en el desafío el tiempo corre 3 veces más rápido: el paisaje también, para que los biomas no cambien antes de que pasen sus objetos
+  const VIS = () => flMode === 'chal' ? 65 : 30;
+  const rnd = (a, b) => a + Math.random()*(b - a);
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const ck = {pitch: 0, runway: 0, dist: 0, sea: -1, clouds: [], ground: [], peaks: [], bld: []};
+  // biomas a lo largo de cada ruta: [desde km, bioma, nombre que se muestra]
+  const ROUTE_N = [[0,'ciudad','Santiago'],[45,'valle','Valle Central'],[330,'semiarido','Norte Chico'],[700,'desierto','Desierto de Atacama'],[1200,'salares','Salares de Atacama'],[1650,'desierto','Desierto de Atacama'],[1950,'valles','Costa sur del Perú'],[2390,'ciudad','Lima']];
+  const ROUTE_S = [[0,'ciudad','Santiago'],[45,'valle','Valle Central'],[420,'bosque','Bosques del sur'],[800,'lagos','Lagos y volcanes'],[1150,'fiordos','Fiordos de Aysén'],[1700,'hielo','Campo de Hielo Sur'],[2050,'fiordos','Fiordos de Magallanes'],[2350,'lagos','Lagos y volcanes']];
+  const BIO = {
+    ciudad:   {g:['#B5B0A4','#C8C3B5'], rock:'#8F8A86', obj:{city:5, field:4, park:1}, peak:[3500,6000], snow:3800, cu:0.45, deck:0},
+    valle:    {g:['#9DB07A','#B7BC97'], rock:'#8C8780', obj:{field:9, town:1, forest:1}, peak:[3500,6500], snow:3800, cu:0.55, deck:0},
+    semiarido:{g:['#B8AA8A','#C8BCA0'], rock:'#977F68', obj:{scrub:6, field:2, rock:3}, peak:[3500,6000], snow:4600, cu:0.2, deck:0.6},
+    desierto: {g:['#D6BC8E','#DCC8A3'], rock:'#A2846A', obj:{dune:6, rock:3, mine:1}, peak:[4500,6500], snow:5700, cu:0.03, deck:1},
+    salares:  {g:['#CFB48B','#D9C4A0'], rock:'#A07F69', obj:{salar:4, dune:3, lagoon:1, rock:2}, peak:[5000,6700], snow:5700, cu:0.03, deck:1, volc:0.5},
+    valles:   {g:['#D9C29A','#E0CDA9'], rock:'#A2866C', obj:{dune:5, oasis:3, field:1}, peak:[4500,6500], snow:5000, cu:0.08, deck:1},
+    bosque:   {g:['#6F9459','#8EA67A'], rock:'#6F7868', obj:{forest:6, field:4, town:1}, peak:[1800,3400], snow:1900, cu:0.8, deck:0, volc:0.35},
+    lagos:    {g:['#6B8F57','#89A27A'], rock:'#6C7666', obj:{forest:5, lake:3, field:2}, peak:[1800,3400], snow:1800, cu:0.8, deck:0, volc:0.5},
+    fiordos:  {g:['#58774F','#7E9578'], rock:'#646D66', obj:{forest:5, channel:4, snowp:1}, peak:[1500,3000], snow:1300, cu:0.9, deck:0},
+    hielo:    {g:['#E2E9EE','#D8E1E7'], rock:'#6E747A', obj:{ice:5, rock:3, lagoon:1}, peak:[2000,3500], snow:800, cu:0.7, deck:0}
+  };
+  function routeAt(km){
+    const R = flMode === 'chal' ? ROUTE_N : ROUTE_S;
+    if (flMode !== 'chal' && km > 2600) km = 45 + (km - 45) % 2555;   // el vuelo libre no termina: el sur se repite
+    let r = R[0]; for (const e of R) if (km >= e[0]) r = e;
+    return r;
+  }
+  const biomeAt = km => BIO[routeAt(km)[1]];
+  const weighted = o => { let t = 0; for (const k in o) t += o[k]; let r = Math.random()*t; for (const k in o){ r -= o[k]; if (r <= 0) return k; } return Object.keys(o)[0]; };
+  // línea de la costa (x lateral, en m) en el punto que está u km más adelante del inicio del recorrido visual
+  const coastAt = u => ck.sea*(7000 + 2600*Math.sin(u/41) + 1300*Math.sin(u/13.7 + 1));
+  const FIELD = ['#8FAE62','#A9BB6E','#7E9F57','#C5C186','#9CB46A','#B7A86A','#6F9450'];
+  function newGround(z){
+    const B = biomeAt((fl.x || 0) + 60), t = weighted(B.obj), u = (ck.dist + z)/1000;
+    const o = {t, z, x: coastAt(u) - ck.sea*rnd(600, 70000), w: 1000, l: 1000, rot: rnd(-0.35, 0.35), c: '#999'};
+    if (t === 'field'){ o.w = rnd(1500, 3800); o.l = rnd(1500, 3800); o.cells = Array.from({length: 6}, () => pick(FIELD)); }
+    else if (t === 'city'){ o.w = rnd(6000, 16000); o.l = rnd(5000, 12000); o.c = '#A7A39A'; }
+    else if (t === 'town'){ o.t = 'city'; o.w = rnd(800, 2200); o.l = rnd(800, 2000); o.c = '#ABA79E'; }
+    else if (t === 'park'){ o.t = 'blob'; o.w = rnd(600, 1600); o.l = o.w*rnd(0.6, 1); o.c = '#7FA05E'; }
+    else if (t === 'forest'){ o.t = 'blob'; o.w = rnd(1500, 6000); o.l = o.w*rnd(0.5, 1.2); o.c = pick(['#4E7343','#5A7F4A','#456A3C']); }
+    else if (t === 'scrub'){ o.t = 'blob'; o.w = rnd(300, 1200); o.l = o.w; o.c = '#9C9A73'; }
+    else if (t === 'rock'){ o.t = 'blob'; o.w = rnd(900, 3500); o.l = o.w*rnd(0.5, 1); o.c = pick(['#B39673','#A88B69','#9F9187']); }
+    else if (t === 'dune'){ o.t = 'blob'; o.w = rnd(2500, 7000); o.l = rnd(350, 900); o.c = '#E4D1A9'; }
+    else if (t === 'mine'){ o.t = 'mine'; o.w = rnd(1500, 3000); o.l = o.w; o.c = '#9D978F'; }
+    else if (t === 'salar'){ o.t = 'blob'; o.w = rnd(4000, 14000); o.l = o.w*rnd(0.4, 0.9); o.c = '#F3F1EA'; }
+    else if (t === 'lagoon'){ o.t = 'blob'; o.w = rnd(400, 1600); o.l = o.w*0.7; o.c = '#5FB8C3'; }
+    else if (t === 'oasis'){ o.t = 'oasis'; o.x = coastAt(u) - ck.sea*30000; o.w = 60000; o.l = rnd(1800, 4000); o.rot = 0; o.c = '#7FA45E'; }
+    else if (t === 'lake'){ o.t = 'blob'; o.w = rnd(2500, 10000); o.l = o.w*rnd(0.3, 0.8); o.c = '#4E86B8'; }
+    else if (t === 'channel'){ o.t = 'blob'; o.w = rnd(900, 2500); o.l = rnd(6000, 16000); o.c = '#4A7FA8'; }
+    else if (t === 'snowp'){ o.t = 'blob'; o.w = rnd(1000, 4000); o.l = o.w*0.6; o.c = '#EEF2F5'; }
+    else if (t === 'ice'){ o.t = 'blob'; o.w = rnd(3000, 9000); o.l = rnd(300, 700); o.c = '#C3D1DB'; }
+    return o;
+  }
+  function newPeak(z){
+    const B = biomeAt((fl.x || 0) + 150), andes = -ck.sea, hill = Math.random() < 0.3;
+    const H = hill ? rnd(700, 2000) : rnd(B.peak[0], B.peak[1]);
+    return {z, H, x: andes*(hill ? rnd(14000, 45000) : rnd(42000, 170000)), w: H*rnd(2.2, 3.6), snow: B.snow, c: B.rock, volc: !hill && Math.random() < (B.volc || 0.08)};
+  }
+  function newCloud(z){
+    const B = biomeAt((fl.x || 0) + 80), r = Math.random(), u = (ck.dist + z)/1000;
+    if (r < B.deck*0.55)        // camanchaca: un manto de nubes bajas sobre el mar, típico de la costa del norte
+      return {k: 'deck', z, y: rnd(650, 1000), x: coastAt(u) + ck.sea*rnd(-2000, 50000), w: rnd(7000, 18000), l: rnd(3000, 9000)};
+    if (Math.random() < B.cu)
+      return {k: 'cu', z, y: rnd(1500, 2600), x: rnd(-45000, 45000), s: rnd(600, 1500), puffs: Array.from({length: 6}, (_, i) => [(i - 2.5)*0.42 + rnd(-0.1, 0.1), rnd(0.15, 0.55), rnd(0.35, 0.6)])};
+    if (Math.random() < 0.45)
+      return {k: 'ac', z, y: rnd(5200, 6600), x: rnd(-45000, 45000), s: rnd(250, 700), puffs: Array.from({length: 3}, (_, i) => [(i - 1)*0.5, rnd(0.1, 0.3), rnd(0.35, 0.55)])};
+    return {k: 'ci', z, y: rnd(9200, 10800), x: rnd(-50000, 50000), s: rnd(3000, 7000)};
+  }
+  function worldReset(){
+    ck.sea = flMode === 'chal' ? -1 : 1; ck.dist = 0;
+    ck.ground = Array.from({length: 230}, () => newGround(rnd(100, ZFAR)));
+    ck.peaks = Array.from({length: 110}, () => newPeak(rnd(3000, MFAR)));
+    ck.clouds = Array.from({length: 75}, () => newCloud(rnd(400, 70000)));
+    // al partir: la cordillera cerca de Santiago (a unos 40 km) y edificios alrededor del aeropuerto,
+    // para que desde la pista ya se vea dónde estás. Los edificios no reaparecen una vez que pasan.
+    const andes = -ck.sea;
+    for (let i = 0; i < 22; i++){ const z = rnd(35000, 160000); ck.peaks.push({z, H: rnd(4200, 6400), x: andes*z*rnd(0.15, 0.6), w: rnd(9000, 18000), snow: 3800, c: '#8F8A86', volc: false}); }
+    ck.bld = [];
+    for (let i = 0; i < 110; i++){
+      const sgn = Math.random() < 0.5 ? -1 : 1, z = rnd(250, 9000);
+      ck.bld.push({z, x: sgn*rnd(Math.max(120, z*0.08), z*0.45 + 300), w: rnd(30, 90), d: rnd(30, 90), hg: Math.random() < 0.2 ? rnd(60, 180) : rnd(10, 45), c: pick(['#CDD2D9','#D8D2C6','#BFC7D1','#E2DED6'])});
+    }
+  }
+  // edificio: caja con frente, costado y techo, en perspectiva
+  function drawBld(b, gx, gy, f, h, hy){
+    const z0 = b.z - b.d/2; if (z0 < 30) return;
+    const z1 = b.z + b.d/2, xl = b.x - b.w/2, xr = b.x + b.w/2, top = Y => hy - (Y - h)/z0*f;
+    const fx0 = gx(xl, z0), fx1 = gx(xr, z0), yb = gy(z0), yt = top(b.hg);
+    if (fx1 < -10 || fx0 > CW + 10 || fx1 - fx0 < 0.4) return;
+    const P = (x, z, Y) => [gx(x, z), hy - (Y - h)/z*f];
+    ckx.fillStyle = mix(b.c, '#DCE6EF', Math.min(0.7, b.z/16000));
+    ckx.fillRect(fx0, yt, fx1 - fx0, yb - yt);
+    const sx = b.x > 0 ? xl : xr;   // costado que se ve: el que mira hacia el centro
+    ckx.fillStyle = 'rgba(40,50,65,0.18)'; ckx.beginPath(); ckx.moveTo(...P(sx, z0, 0)); ckx.lineTo(...P(sx, z1, 0)); ckx.lineTo(...P(sx, z1, b.hg)); ckx.lineTo(...P(sx, z0, b.hg)); ckx.fill();
+    if (b.hg > h){ ckx.fillStyle = 'rgba(255,255,255,0.35)'; ckx.beginPath(); ckx.moveTo(...P(xl, z0, b.hg)); ckx.lineTo(...P(xr, z0, b.hg)); ckx.lineTo(...P(xr, z1, b.hg)); ckx.lineTo(...P(xl, z1, b.hg)); ckx.fill(); }
+    else { ckx.fillStyle = 'rgba(120,128,140,0.5)'; ckx.beginPath(); ckx.moveTo(...P(xl, z0, b.hg)); ckx.lineTo(...P(xr, z0, b.hg)); ckx.lineTo(...P(xr, z1, b.hg)); ckx.lineTo(...P(xl, z1, b.hg)); ckx.fill(); }
+    if (fx1 - fx0 > 6 && yb - yt > 10){   // ventanas
+      ckx.fillStyle = 'rgba(70,110,150,0.35)';
+      for (let yy = yt + 3; yy < yb - 3; yy += Math.max(3, (yb - yt)/8)) ckx.fillRect(fx0 + 2, yy, fx1 - fx0 - 4, Math.max(1, (yb - yt)/24));
+    }
+  }
+  function fitCk(){
+    const r = ckCv.getBoundingClientRect(); if (!r.width || !r.height) return false;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    CW = r.width; CH = r.height;
+    const w = Math.round(CW*dpr), h = Math.round(CH*dpr);
+    if (ckCv.width !== w || ckCv.height !== h){ ckCv.width = w; ckCv.height = h; }
+    ckx.setTransform(dpr, 0, 0, dpr, 0, 0); return true;
+  }
+  new ResizeObserver(fitCk).observe($('cockpit'));
+  const mix = (a, b, t) => { const p = c => [1,3,5].map(i => parseInt(c.slice(i, i+2), 16)); const A = p(a), B = p(b); return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join(''); };
+  // altura en la que el avión se estabiliza con la velocidad y el ángulo pedidos (sustentación = peso)
+  function eqAltFt(VtKmh, al, Wkg){
+    const V = VtKmh/3.6, CL = CLof(al, B_FLT); if (CL <= 0) return -1;
+    const rho = 2*Wkg*G/(V*V*SW*CL);
+    if (rho > 1.225) return -1;
+    const h = rho >= 0.3639 ? (288.15 - 288.15*Math.pow(rho/1.225, 1/4.2559))/0.0065 : 11000 - 6341.6*Math.log(rho/0.3639);
+    return h/FT;
+  }
+  const eqNow = () => fl.phase === 'fly' ? eqAltFt(Math.min(UkmhTarget, VMO(fl.h)*3.6), alphaDegTarget, OEW + fl.fuel) : null;
+
+  function drawCockpit(dtReal){
+    if (!CW && !fitCk()) return;
+    if (!ck.ground.length) worldReset();
+    const W = CW, H = CH, narrow = W < 600;
+    const dashTop = $('cockpit').querySelector('.dash').offsetTop;   // el tablero lo ubica el CSS
+    const f = Math.max(dashTop*1.3, W*0.6), cx = W/2, h = Math.max(fl.h || 0, 3);
+    const flying = fl.phase && fl.phase !== 'ready' && fl.phase !== 'done';
+    const pitchT = flying ? (fl.gam || 0)*180/Math.PI + (fl.phase==='fly' ? alphaDegTarget*0.6 : fl.phase==='auto' ? AUTO_CLIMB_DEG*0.6 : 2) : 0;
+    ck.pitch += (pitchT - ck.pitch)*Math.min(1, dtReal*3);
+    const hy = dashTop*0.5 + ck.pitch*f*Math.PI/180;
+    const dz = flying ? (fl.V || 0)*dtReal*VIS() : 0;
+    ck.dist += dz;
+    const gx = (x, z) => cx + x/z*f, gy = z => hy + h/z*f;
+    const B0 = biomeAt(fl.x || 0), B1 = biomeAt((fl.x || 0) + 120);
+    // cielo: más azul y oscuro a medida que se sube; sol con su halo
+    const t = Math.min(1, h/12000);
+    const sky = ckx.createLinearGradient(0, 0, 0, hy);
+    sky.addColorStop(0, mix('#9CCBEE', '#2A64AE', t)); sky.addColorStop(1, mix('#E6F2FB', '#C3DDF2', t));
+    ckx.fillStyle = sky; ckx.fillRect(0, 0, W, Math.max(0, hy));
+    const sx0 = cx + 0.42*f*ck.sea*-1, sy0 = hy - 0.5*f;
+    const sun = ckx.createRadialGradient(sx0, sy0, 0, sx0, sy0, W*0.35);
+    sun.addColorStop(0, 'rgba(255,253,240,1)'); sun.addColorStop(0.06, 'rgba(255,250,228,0.9)'); sun.addColorStop(0.25, 'rgba(255,246,220,0.25)'); sun.addColorStop(1, 'rgba(255,246,220,0)');
+    ckx.fillStyle = sun; ckx.fillRect(0, 0, W, Math.max(0, hy));
+    // suelo base: el color del bioma actual cerca y el del que viene, en el horizonte
+    const gr = ckx.createLinearGradient(0, hy, 0, H);
+    gr.addColorStop(0, '#DCDCD4'); gr.addColorStop(0.08, B1.g[1]); gr.addColorStop(0.5, mix(B1.g[0], B0.g[0], 0.6)); gr.addColorStop(1, B0.g[0]);
+    ckx.fillStyle = gr; ckx.fillRect(0, hy, W, H - hy);
+    // objetos del suelo, de lejos a cerca
+    for (const o of ck.ground){ o.z -= dz; if (o.z < 60) Object.assign(o, newGround(rnd(ZFAR*0.85, ZFAR))); }
+    ck.ground.sort((a, b) => b.z - a.z);
+    for (const o of ck.ground) drawGround(o, gx, gy, f, h, H);
+    // mar y costa (con su línea de playa) y la carretera Panamericana
+    const zMin = h*f/Math.max(1, H - hy), pts = [], road = [];
+    for (let z = Math.max(zMin, 30); z < 260000; z *= 1.12){ const u = (ck.dist + z)/1000, c = coastAt(u); pts.push([gx(c, z), gy(z)]); road.push([gx(c - ck.sea*12000, z), gy(z)]); }
+    const edge = ck.sea < 0 ? -20 : W + 20;
+    const sea = ckx.createLinearGradient(0, hy, 0, H);
+    sea.addColorStop(0, '#BCD5E6'); sea.addColorStop(0.12, '#7EB0D6'); sea.addColorStop(1, '#3F80BA');
+    ckx.fillStyle = sea; ckx.beginPath(); ckx.moveTo(edge, hy);
+    for (let i = pts.length - 1; i >= 0; i--) ckx.lineTo(pts[i][0], pts[i][1]);
+    ckx.lineTo(pts[0][0], H + 20); ckx.lineTo(edge, H + 20); ckx.closePath(); ckx.fill();
+    ckx.lineJoin = 'round';
+    ckx.strokeStyle = 'rgba(255,255,255,0.75)'; ckx.lineWidth = 1.6; ckx.beginPath(); pts.forEach((p, i) => i ? ckx.lineTo(...p) : ckx.moveTo(...p)); ckx.stroke();
+    ckx.strokeStyle = 'rgba(110,104,96,0.55)'; ckx.lineWidth = 1; ckx.beginPath(); road.forEach((p, i) => i ? ckx.lineTo(...p) : ckx.moveTo(...p)); ckx.stroke();
+    // pista (solo al principio)
+    if (fl.phase === 'ready' || fl.phase === 'takeoff') ck.runway += dz; else if (fl.phase !== 'done') ck.runway = 1e9;
+    if (ck.runway < 3000){
+      const z0 = Math.max(4, 20 - ck.runway), z1 = 3000 - ck.runway, P = (x, z) => [gx(x, z), gy(z)];
+      if (z1 > z0){
+        const a = P(-24, z0), b = P(24, z0), c = P(24, z1), d = P(-24, z1);
+        ckx.fillStyle = '#7D8794'; ckx.beginPath(); ckx.moveTo(...a); ckx.lineTo(...b); ckx.lineTo(...c); ckx.lineTo(...d); ckx.fill();
+        ckx.strokeStyle = '#F4F6F8'; ckx.lineWidth = 2;
+        for (let z = Math.ceil((z0 + ck.runway)/60)*60 - ck.runway; z < z1; z += 60){ const p1 = P(0, Math.max(z, z0)), p2 = P(0, Math.min(z + 30, z1)); ckx.beginPath(); ckx.moveTo(...p1); ckx.lineTo(...p2); ckx.stroke(); }
+      }
+    }
+    // montañas y nubes juntas, ordenadas por distancia (así una nube cercana tapa un cerro lejano y al revés)
+    for (const p of ck.peaks){ p.z -= dz; if (p.z < 2500 - p.w) Object.assign(p, newPeak(rnd(MFAR*0.8, MFAR))); }
+    for (const c of ck.clouds){ c.z -= dz; if (c.z < 150) Object.assign(c, newCloud(rnd(55000, 70000))); }
+    for (const b of ck.bld) b.z -= dz;
+    ck.bld = ck.bld.filter(b => b.z > 0);
+    const items = ck.peaks.concat(ck.clouds, ck.bld).sort((a, b) => b.z - a.z);
+    let fog = 0;
+    for (const it of items){
+      if (it.hg){ drawBld(it, gx, gy, f, h, hy); continue; }
+      if (it.H){ drawPeak(it, gx, gy, f, h, hy); continue; }
+      fog = Math.max(fog, drawCloud(it, gx, f, h, hy, W, H));
+    }
+    // bruma en el horizonte (más espesa cerca del suelo)
+    const hz = ckx.createLinearGradient(0, hy - 40, 0, hy + 40), ha = 0.35 + 0.4*(1 - t);
+    hz.addColorStop(0, 'rgba(232,240,248,0)'); hz.addColorStop(0.5, `rgba(232,240,248,${ha})`); hz.addColorStop(1, 'rgba(232,240,248,0)');
+    ckx.fillStyle = hz; ckx.fillRect(0, hy - 40, W, 80);
+    if (fog > 0.02){ ckx.fillStyle = `rgba(244,247,250,${Math.min(0.88, fog)})`; ckx.fillRect(0, 0, W, H); }
+    drawFrame(W, H, dashTop);
+  }
+  function drawGround(o, gx, gy, f, h, H){
+    const z = o.z; if (z < 80) return;
+    const sx = gx(o.x, z), sy = gy(z), rw = o.w/2/z*f;
+    if (sy > H + 40 || rw < 0.6 || sx + rw < -50 || sx - rw > CW + 50) return;
+    const fade = Math.min(1, 0.3 + 25000/z*0.12);
+    ckx.globalAlpha = fade;
+    if (o.t === 'blob' || o.t === 'mine' || o.t === 'oasis' || rw < 5 || o.z - o.l < 200){
+      const rh = Math.max(0.5, o.l/2*h*f/(z*z));
+      ckx.fillStyle = o.cells ? o.cells[0] : o.c;
+      ckx.beginPath(); ckx.ellipse(sx, sy, rw, rh, 0, 0, 7); ckx.fill();
+      if (o.t === 'mine' && rw > 4){ ckx.strokeStyle = 'rgba(80,76,70,0.5)'; ckx.lineWidth = 1; for (const k of [0.65, 0.35]){ ckx.beginPath(); ckx.ellipse(sx, sy, rw*k, rh*k, 0, 0, 7); ckx.stroke(); } }
+      if (o.t === 'oasis' && rh > 0.8){ ckx.strokeStyle = 'rgba(70,120,170,0.7)'; ckx.lineWidth = 1; ckx.beginPath(); ckx.moveTo(sx - rw, sy); ckx.lineTo(sx + rw, sy); ckx.stroke(); }
+      ckx.globalAlpha = 1; return;
+    }
+    // campos y ciudades: cuadriláteros en el suelo, girados y en perspectiva
+    const c = Math.cos(o.rot), s = Math.sin(o.rot);
+    const P = (a, b) => { const X = o.x + a*c - b*s, Z = z + a*s + b*c; return [gx(X, Z), gy(Z)]; };
+    const quad = (a0, b0, a1, b1, col) => { const p = [P(a0, b0), P(a1, b0), P(a1, b1), P(a0, b1)]; ckx.fillStyle = col; ckx.beginPath(); ckx.moveTo(...p[0]); for (let i = 1; i < 4; i++) ckx.lineTo(...p[i]); ckx.closePath(); ckx.fill(); };
+    const hw = o.w/2, hl = o.l/2;
+    if (o.cells){ for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) quad(-hw + i*o.w/3, -hl + j*o.l/2, -hw + (i + 1)*o.w/3 - 40, -hl + (j + 1)*o.l/2 - 40, o.cells[i*2 + j]); }
+    else {
+      quad(-hw, -hl, hw, hl, o.c);
+      if (rw > 25){   // calles de la ciudad
+        ckx.strokeStyle = 'rgba(214,210,200,0.8)'; ckx.lineWidth = 1; ckx.beginPath();
+        for (let k = 1; k < 8; k++){ const a = -hw + k*o.w/8, b = -hl + k*o.l/8; ckx.moveTo(...P(a, -hl)); ckx.lineTo(...P(a, hl)); ckx.moveTo(...P(-hw, b)); ckx.lineTo(...P(hw, b)); }
+        ckx.stroke();
+      }
+    }
+    ckx.globalAlpha = 1;
+  }
+  function drawPeak(p, gx, gy, f, h, hy){
+    const z = p.z, base = gy(z), top = hy - (p.H - h)/z*f, xl = gx(p.x - p.w, z), xr = gx(p.x + p.w, z), xm = gx(p.x, z);
+    if (xr < -10 || xl > CW + 10 || base - top < 0.8) return;
+    const haze = Math.min(0.82, 0.12 + z/MFAR*0.9), col = mix(p.c, '#C9D6E3', haze), tw = p.volc ? (xr - xl)*0.06 : 0;
+    const pg = ckx.createLinearGradient(0, top, 0, base); pg.addColorStop(0, col); pg.addColorStop(1, mix(mix(p.c, '#5E5850', 0.35), '#C9D6E3', haze));   // base más oscura: da volumen
+    ckx.fillStyle = pg; ckx.beginPath(); ckx.moveTo(xl, base); ckx.lineTo(xm - tw, top); ckx.lineTo(xm + tw, top); ckx.lineTo(xr, base); ckx.closePath(); ckx.fill();
+    ckx.fillStyle = 'rgba(20,30,45,0.10)'; ckx.beginPath(); ckx.moveTo(xm + tw, top); ckx.lineTo(xr, base); ckx.lineTo(xm + (xr - xm)*0.15, base); ckx.closePath(); ckx.fill();
+    if (base - top > 60){   // cerro cercano: quebradas que bajan desde la cumbre, para que no se vea como una pared lisa
+      ckx.strokeStyle = 'rgba(40,36,32,0.10)'; ckx.lineWidth = Math.max(1, (base - top)/90);
+      for (let i = 1; i <= 7; i++){ const fr = i/8, bx = xl + (xr - xl)*fr; ckx.beginPath(); ckx.moveTo(xm + (bx - xm)*0.12, top + (base - top)*0.1); ckx.quadraticCurveTo(xm + (bx - xm)*0.55 + (i % 2 ? 6 : -6), top + (base - top)*0.55, bx, base); ckx.stroke(); }
+    }
+    if (p.H > p.snow){
+      const k = (p.H - p.snow)/p.H*(p.volc ? 1.15 : 1), yb = top + (base - top)*k;
+      ckx.fillStyle = mix('#FFFFFF', '#DCE5EE', haze*0.6); ckx.beginPath();
+      ckx.moveTo(xm - tw, top); ckx.lineTo(xm + tw, top); ckx.lineTo(xm + tw + (xr - xm - tw)*k, yb);
+      for (let i = 1; i < 4; i++) ckx.lineTo(xm + tw + (xr - xm - tw)*k - i*(xr - xl)*k/4, yb + (i % 2 ? 3 : -1)*Math.min(3, (base - top)*0.04));
+      ckx.lineTo(xm - tw - (xm - tw - xl)*k, yb); ckx.closePath(); ckx.fill();
+    }
+  }
+  // dibuja una nube; devuelve cuánto "adentro" de ella está la cámara (0 a 1) para blanquear la ventana
+  function drawCloud(c, gx, f, h, hy, W, H){
+    const z = c.z, sx = gx(c.x, z), sy = hy - (c.y - h)/z*f, dy = Math.abs(c.y - h);
+    if (c.k === 'deck'){
+      const rw = c.w/2/z*f, rh = Math.max(0.6, c.l/2*Math.max(dy, 60)*f/(z*z));
+      const inside = dy < 180 && Math.abs(c.x) < c.w/2 && z < c.l/2 ? 1 - dy/180 : 0;
+      if (rw < 2 || sx + rw < 0 || sx - rw > W) return inside;
+      const g = ckx.createRadialGradient(sx, sy, 0, sx, sy, rw);
+      g.addColorStop(0, 'rgba(255,255,255,0.92)'); g.addColorStop(0.6, 'rgba(250,252,254,0.75)'); g.addColorStop(1, 'rgba(250,252,254,0)');
+      ckx.save(); ckx.translate(sx, sy); ckx.scale(1, rh/rw); ckx.translate(-sx, -sy);
+      ckx.fillStyle = g; ckx.beginPath(); ckx.arc(sx, sy, rw, 0, 7); ckx.fill(); ckx.restore();
+      return inside;
+    }
+    const r = c.s/z*f;
+    const th = c.k === 'ci' ? 200 : c.s*0.6;   // un cirro es delgado: solo se entra en él a su misma altura
+    const inside = dy < th && z < c.s*1.5 && Math.abs(c.x) < c.s*1.6 ? Math.max(0, 1 - z/(c.s*1.5))*(1 - dy/th) : 0;
+    if (r < 0.8 || r > W*2.5 || sx < -r*3 || sx > W + r*3 || sy < -r*2 || sy > H + r*2) return inside;
+    ckx.globalAlpha = Math.min(0.95, 0.4 + 15000/z*0.1);
+    if (c.k === 'ci'){ ckx.fillStyle = 'rgba(255,255,255,0.5)'; ckx.beginPath(); ckx.ellipse(sx, sy, r*1.6, r*0.1, 0, 0, 7); ckx.fill(); ckx.globalAlpha = 1; return inside; }
+    ckx.fillStyle = '#D9E1E9'; ckx.beginPath(); ckx.ellipse(sx, sy + r*0.12, r*1.25, r*0.3, 0, 0, 7); ckx.fill();
+    for (const [ox, oy, rr] of c.puffs){
+      const px = sx + ox*r, py = sy - oy*r;
+      const g = ckx.createRadialGradient(px - rr*r*0.3, py - rr*r*0.4, 0, px, py, rr*r);
+      g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.75, '#F4F7FA'); g.addColorStop(1, '#E2E9F0');
+      ckx.fillStyle = g; ckx.beginPath(); ckx.arc(px, py, rr*r, 0, 7); ckx.fill();
+    }
+    ckx.globalAlpha = 1;
+    return inside;
+  }
+  // vista "ventana": marco claro y tablero con las tarjetas HTML encima
+  function drawFrame(W, H, dashTop){
+    const m = Math.max(10, W*0.018), rad = 26;
+    ckx.fillStyle = '#C3CDD9'; ckx.beginPath(); ckx.rect(0, 0, W, H);
+    ckx.roundRect(m, m, W - 2*m, dashTop - m + 4, [rad, rad, 8, 8]); ckx.fill('evenodd');
+    ckx.strokeStyle = '#A4B1C1'; ckx.lineWidth = 3; ckx.beginPath(); ckx.roundRect(m, m, W - 2*m, dashTop - m + 4, [rad, rad, 8, 8]); ckx.stroke();
+    const dg = ckx.createLinearGradient(0, dashTop, 0, H); dg.addColorStop(0, '#B9C5D3'); dg.addColorStop(0.08, '#D6DEE7'); dg.addColorStop(1, '#C7D1DD');
+    ckx.fillStyle = dg; ckx.beginPath(); ckx.moveTo(0, dashTop + 10); ckx.quadraticCurveTo(W/2, dashTop - 14, W, dashTop + 10); ckx.lineTo(W, H); ckx.lineTo(0, H); ckx.closePath(); ckx.fill();
+  }
+
+  function cockpitHUD(){
+    const chal = flMode === 'chal';
+    $('ckGo').hidden = fl.phase !== 'ready';
+    $('ckAlt').textContent = fmtInt(fl.h/FT);
+    let eqTxt = 'pies';
+    if (fl.phase === 'fly'){
+      const eq = eqNow(), cur = fl.h/FT;
+      eqTxt = eq < 0 ? '⚠ así no se sostiene: baja' : Math.abs(eq - cur) < 600 ? 'pies · estable ✓' : (eq > cur ? '↗ sube hasta ' : '↘ baja hasta ') + (eq > 41000 ? 'sobre 41.000 (techo del 737)' : fmtInt(Math.round(eq/500)*500));
+    }
+    $('ckEq').textContent = eqTxt;
+    const e = effNow();
+    $('ckEff').textContent = e === null ? '—' : Math.round(e*100)+'%';
+    $('ckEff').style.color = e === null ? 'var(--muted)' : e >= 0.97 ? 'var(--good-ink)' : e >= 0.9 ? 'var(--accent)' : e >= 0.8 ? 'var(--warn-ink)' : 'var(--hot-ink)';
+    $('ckEffBar').style.width = e === null ? '0' : Math.max(0, e*100)+'%';
+    if (chal){
+      $('ckThirdLbl').textContent = 'Combustible'; $('ckThird').textContent = fmtInt(fl.used)+' kg';
+      const left = DEADLINE_MIN*60 - fl.t; $('ckThirdSub').textContent = left >= 0 ? 'quedan '+fmtTime(left) : 'atraso '+fmtTime(-left);
+      $('ckFrom').textContent = 'Santiago'; $('ckTo').textContent = 'Lima';
+      const pr = Math.min(100, fl.x/ROUTE*100); $('ckProg').style.width = pr+'%'; $('ckPlane').style.left = pr+'%'; $('ckProg').parentNode.style.visibility = '';
+    } else {
+      $('ckThirdLbl').textContent = 'Velocidad'; $('ckThird').textContent = fmtInt(fl.V*3.6)+' km/h'; $('ckThirdSub').textContent = fl.M ? 'Mach '+fmtDec(fl.M, 2) : '';
+      // la barra muestra cuánto falta para la meta del 95%
+      $('ckFrom').textContent = 'Meta 95%';
+      $('ckTo').textContent = fl.goalDone ? '✓ lograda' : fl.goalT > 0 ? 'mantenlo… '+Math.ceil(GOAL_HOLD - fl.goalT) : 'tu mejor: '+(fl.best ? Math.round(fl.best*100)+'%' : '—');
+      const pr = Math.min(100, (fl.best || 0)/0.95*100); $('ckProg').style.width = pr+'%'; $('ckPlane').style.left = pr+'%'; $('ckProg').parentNode.style.visibility = '';
+    }
+    const w = $('flMsg').textContent; $('ckWarn').hidden = !w; $('ckWarn').textContent = w;
+  }
+  // palancas: arrastrar (cada una con su propio dedo) o teclado
+  const LEVERS = [[$('lvVel'), velEl, 5], [$('lvAoa'), aoaEl, 0.1]];
+  function leversSync(){
+    for (const [lv, el] of LEVERS){
+      const fr = (+el.value - +el.min)/(+el.max - +el.min), tr = lv.querySelector('.tr');
+      lv.querySelector('.kn').style.top = (19 + (1 - fr)*(tr.clientHeight - 38))+'px';
+      lv.querySelector('.tr i').style.height = 'calc('+(fr*100)+'% - 8px)';
+      lv.querySelector('.kn').textContent = el === velEl ? Math.round(+el.value) : fmtDec(+el.value, 1)+'°';
+    }
+  }
+  for (const [lv, el, st] of LEVERS){
+    const tr = lv.querySelector('.tr');
+    const set = e => {
+      const r = tr.getBoundingClientRect(), fr = Math.max(0, Math.min(1, 1 - (e.clientY - r.top - 19)/(r.height - 38)));
+      el.value = Math.round((+el.min + fr*(+el.max - +el.min))/st)*st; setFromSlider();
+    };
+    tr.addEventListener('pointerdown', e => { e.preventDefault(); tr.setPointerCapture(e.pointerId); set(e); });
+    tr.addEventListener('pointermove', e => { if (tr.hasPointerCapture(e.pointerId)) set(e); });
+  }
+  new ResizeObserver(leversSync).observe($('lvVel'));
+  const keys = new Set();
+  addEventListener('keydown', e => {
+    if (level < 2 || document.activeElement?.type === 'range' || !['KeyW','KeyS','ArrowUp','ArrowDown'].includes(e.code)) return;
+    e.preventDefault(); keys.add(e.code);
+  });
+  addEventListener('keyup', e => keys.delete(e.code));
+  addEventListener('blur', () => keys.clear());
+  // los cambios se acumulan aparte: un paso por cuadro (0,03°) es menor que el paso del control (0,1°) y se perdería al redondear
+  const keyAcc = {v: 0, a: 0};
+  function applyKeys(dt){
+    if (!keys.size) return;
+    const dv = (keys.has('KeyW') ? 1 : 0) - (keys.has('KeyS') ? 1 : 0), da = (keys.has('ArrowUp') ? 1 : 0) - (keys.has('ArrowDown') ? 1 : 0);
+    keyAcc.v += dv*150*dt; keyAcc.a += da*2*dt;
+    let moved = false;
+    for (const [k, el, st] of [['v', velEl, 1], ['a', aoaEl, 0.1]]){
+      const n = Math.trunc(keyAcc[k]/st); if (!n) continue;
+      keyAcc[k] -= n*st; el.value = Math.min(+el.max, Math.max(+el.min, +el.value + n*st)); moved = true;
+    }
+    if (moved) setFromSlider();
+  }
+  addEventListener('keyup', () => { if (!keys.size){ keyAcc.v = 0; keyAcc.a = 0; } });
+  $('ckGo').addEventListener('click', () => $('flStart').click());
+  // ============================================================
+  // PART 6 — cambio de etapa y explicación
+  // ============================================================
+  function setLevel(n){
+    level = n;
+    document.body.classList.toggle('l2', n===2);
+    document.querySelectorAll('#stageSeg button').forEach(b=>b.classList.toggle('on', +b.dataset.l===n));
+    for (const id of ['modeSeg','flBtns','flMsg','flNums','keysHelp']) $(id).hidden = n!==2;
+    if (n===2){ ck.runway = 0; ck.pitch = 0; }
+    $('liftRow').hidden = n!==1;
+    closeModal('solvedModal');
+    if (n===1){
+      $('title').textContent = 'Calibra el ala en el túnel de viento';
+      $('ins').innerHTML = 'Ajusta la <b>velocidad</b> y el <b>ángulo de ataque</b> (cómo enfrenta el ala al aire) hasta gastar lo mínimo sin que el avión se caiga.';
+      calApplyParams();
+    } else flReset();
+  }
+  document.querySelectorAll('#stageSeg button').forEach(b=>b.addEventListener('click', ()=>setLevel(+b.dataset.l)));
+  function openExplain(toFlight){
+    openModal('explain');
+    const box = $('explain').querySelector('.res');
+    if (toFlight) setTimeout(()=>{ box.scrollTo({top: $('revealFlight').offsetTop - 16, behavior:'smooth'}); }, 50);
+    else box.scrollTop = 0;
+  }
+  $('explainBtn').addEventListener('click', ()=>openExplain(false));
+  $('explainClose').addEventListener('click', ()=>closeModal('explain'));
+  $('solvedWhy').addEventListener('click', ()=>{ closeModal('solvedModal'); openExplain(false); });
+  $('solvedNext').addEventListener('click', ()=>setLevel(2));
+  $('solvedStay').addEventListener('click', ()=>closeModal('solvedModal'));
+
+  // ============================================================
+  // PART 7 — bucle
+  // ============================================================
+  new ResizeObserver(()=>{ if (fitCanvas(canvas, ctx, W_, H_)) clearFlow(); }).observe(canvas);
+  let onScreen = true, running = true, lastT = performance.now();
+  new IntersectionObserver(([e])=>{ onScreen = e.isIntersecting; if (onScreen && !running){ running = true; lastT = performance.now(); requestAnimationFrame(loop); } }).observe(canvas);
+  document.addEventListener('visibilitychange', ()=>{ if (!document.hidden && !running){ running = true; lastT = performance.now(); requestAnimationFrame(loop); } });
+  let frameCount = 0;
+  function loop(now){
+    now = now || performance.now();
+    const dt = Math.min(0.25, (now-lastT)/1000); lastT = now;   // tope de 0,25 s: en equipos lentos el vuelo no se ralentiza tanto
+    if (document.hidden){ running = false; return; }
+    if (level===1) calUpdate(dt); else { applyKeys(dt); flTick(dt); }
+    if (level===2){ drawCockpit(dt); cockpitHUD(); }
+    easeVisual();
+    const vis = onScreen || level>=2;
+    if (onScreen){ drawFlowFrame(); stepFlow(); frameCount++; if (frameCount % 60 === 0) rebalanceParticles(); }
+    if (!vis){ running = false; return; }
+    requestAnimationFrame(loop);
+  }
+  setLevel(1);
+  requestAnimationFrame(loop);
+
+  // ============================================================
+  // PART 8 — portada: la historia, con líneas de corriente de fondo
+  // ============================================================
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const bg = $('bg'), bctx = bg.getContext('2d');
+  let bgOn = true, bgW = 0, bgH = 0, streaks = [], storyTimers = [];
+  function bgFit(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    bgW = bg.clientWidth; bgH = bg.clientHeight; bg.width = bgW*dpr; bg.height = bgH*dpr; bctx.setTransform(dpr,0,0,dpr,0,0);
+    streaks = Array.from({length: Math.round(bgW*bgH/9000)}, () => ({x: Math.random()*bgW, y: Math.random()*bgH, v: 60 + Math.random()*90, ph: Math.random()*6.28}));
+  }
+  function bgDraw(now){
+    if (!bgOn) return;
+    bctx.fillStyle = 'rgba(226,237,247,0.06)'; bctx.fillRect(0,0,bgW,bgH);
+    bctx.strokeStyle = 'rgba(31,111,209,0.35)'; bctx.lineWidth = 1.4; bctx.lineCap = 'round';
+    for (const s of streaks){
+      const y0 = s.y + Math.sin(s.x/140 + s.ph)*10;
+      s.x += s.v/60; if (s.x > bgW + 20){ s.x = -20; s.y = Math.random()*bgH; }
+      const y1 = s.y + Math.sin(s.x/140 + s.ph)*10;
+      bctx.beginPath(); bctx.moveTo(s.x - s.v/60, y0); bctx.lineTo(s.x, y1); bctx.stroke();
+    }
+    if (!REDUCED) requestAnimationFrame(bgDraw);
+  }
+  function openStory(){
+    bgFit(); requestAnimationFrame(bgDraw);
+    const lines = [...document.querySelectorAll('.intro .line')], step = REDUCED ? 0 : 1900;
+    lines.forEach((l, k) => storyTimers.push(setTimeout(()=>l.classList.add('on'), 400 + k*step)));
+    storyTimers.push(setTimeout(()=>$('playBtn').classList.add('on'), 400 + lines.length*step));
+  }
+  function revealAll(){ document.querySelectorAll('.intro .line').forEach(l=>l.classList.add('on')); $('playBtn').classList.add('on'); }
+  function closeStory(){
+    storyTimers.forEach(clearTimeout); storyTimers = [];
+    $('intro').classList.add('gone');
+    setTimeout(()=>{ bgOn = false; $('intro').style.display = 'none'; }, 700);
+  }
+  $('playBtn').onclick = closeStory; $('skipBtn').onclick = closeStory;
+  $('intro').addEventListener('click', e => { if (e.target.id !== 'playBtn' && e.target.id !== 'skipBtn') revealAll(); });
+  addEventListener('keydown', e => { if (!$('intro').classList.contains('gone') && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); closeStory(); } });
+  addEventListener('resize', ()=>{ if (bgOn) bgFit(); });
+  openStory();
+})();
+</script>
+</body>
+</html>
