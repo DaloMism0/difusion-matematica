@@ -46,6 +46,10 @@
   .psf{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;}
   .psf canvas{width:72px;height:72px;border-radius:10px;background:#000;flex:none;}
   .psf p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45;} .psf b{color:var(--ink);}
+  .hintfig{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+  .hintfig span{display:block;text-align:center;}
+  .hintfig img{display:block;width:100%;aspect-ratio:1/1;border-radius:8px;background:#000;image-rendering:auto;}
+  .hintfig small{display:block;font-size:11px;line-height:1.3;color:var(--muted);margin-top:4px;}
   .linkbtn{background:none;border:none;color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;padding:0;text-align:left;font-family:inherit;}
   /* ---------- vista: la foto del telescopio como una pantalla ---------- */
   .view{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;
@@ -223,16 +227,21 @@
     <p>La información que tenemos es la imagen borrosa <b>I<sub>borrosa</sub></b>, y la información que queremos es la imagen nítida <b>I<sub>nítida</sub></b>: hay que ir del efecto a la causa. Eso es un <b>problema inverso</b>.</p>
     <p>Deshacer el promedio exige amplificar las diferencias entre píxeles vecinos, y el ruido se amplifica con ellas. Un error pequeño en I<sub>borrosa</sub> produce un error grande en I<sub>nítida</sub>, por eso se dice que el problema está <b>mal condicionado</b>.</p>
     <p>Para resolverlo se elige un número, <b>λ</b>, que decide cuánto amplificar. Con λ grande la imagen queda borrosa; con λ chico aparecen puntos brillantes donde no hay nada. El λ adecuado no se puede calcular de antemano: hay que <b>probar, mirar el resultado y ajustar</b>. Así ocurre en casi todos los problemas inversos. <b>Eso es lo que controlaba tu perilla de nitidez: la perilla es λ.</b></p>
-    <p><button class="linkbtn" id="advT">➕ Para saber más: convolución y filtro de Wiener</button></p>
+    <p><button class="linkbtn" id="advT">➕ Explicación matemática avanzada</button></p>
     <div class="adv" id="adv">
       <p>Una foto real tiene <b>millones de píxeles</b> (la cámara principal del Hubble en 1990 tenía unos 2,5 millones). Además, la luz no se reparte solo entre los vecinos inmediatos sino entre miles de píxeles, y no en partes iguales: los más cercanos reciben más. Si llamamos <b>M</b> a la forma de esa mancha, cada píxel de la foto es una suma con pesos de toda la vecindad. Recuperar la imagen nítida significa resolver <b>millones de ecuaciones como esta, con millones de incógnitas</b>:</p>
       <div class="eq one"><math display="block" displaystyle="true"><mrow><msub><mi>I</mi><mtext>borrosa</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo><mo>=</mo><munder><mo largeop="true" movablelimits="false" stretchy="false" style="font-size:1.6em">∑</mo><mrow><mi>i</mi><mo>,</mo><mi>j</mi></mrow></munder><mi>M</mi><mo stretchy="false">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="false">)</mo><mo>⁢</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo>−</mo><mi>i</mi><mo>,</mo><mi>y</mi><mo>−</mo><mi>j</mi><mo stretchy="false">)</mo><mo>+</mo><mi>r</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo></mrow></math></div>
+      <p>El símbolo <b>∑</b> (la letra griega sigma) significa <b>sumar</b>. Lo que se escribe abajo y arriba de él indica desde dónde y hasta dónde avanza un contador; por ejemplo:</p>
+      <div class="eq"><math display="block" displaystyle="true"><mrow><munderover><mo largeop="true" movablelimits="false" stretchy="false" style="font-size:1.4em">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mn>4</mn></munderover><msub><mi>a</mi><mi>i</mi></msub><mo>=</mo><msub><mi>a</mi><mn>1</mn></msub><mo>+</mo><msub><mi>a</mi><mn>2</mn></msub><mo>+</mo><msub><mi>a</mi><mn>3</mn></msub><mo>+</mo><msub><mi>a</mi><mn>4</mn></msub></mrow></math></div>
+      <p>En la ecuación de <i>I</i><sub>borrosa</sub>(<i>x</i>, <i>y</i>), el contador es la pareja <i>i</i>, <i>j</i>, que recorre todas las posiciones de la mancha. El promedio de los 5 píxeles es un caso particular: <i>M</i> vale 1/5 en el píxel y en sus cuatro vecinos, y 0 en el resto.</p>
       <p>Esta operación se llama <b>convolución</b> y se denota por <span style="font-size:1.35em;line-height:1;vertical-align:-0.15em">∗</span>. De esta forma, la relación entre la imagen nítida y la borrosa se representa por:</p>
       <div class="eq"><math display="block" displaystyle="true"><mrow><msub><mi>I</mi><mtext>borrosa</mtext></msub><mo>=</mo><msub><mi>I</mi><mtext>nítida</mtext></msub><mo>∗</mo><mi>M</mi><mo>+</mo><mi>r</mi></mrow></math></div>
       <p>La convolución es una manera de combinar dos funciones a través de un <b>promedio móvil</b>. En el caso del Hubble, se combina la imagen nítida con la mancha.</p>
       <p>Usando la transformada de Fourier y el filtro de Wiener, se obtiene una fórmula para estimar la imagen nítida:</p>
       <div class="eq one"><math display="block" displaystyle="true"><mrow><msub><mi>I</mi><mtext>nítida</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo><mo>≈</mo><mfrac><mn>1</mn><msup><mi>N</mi><mn>2</mn></msup></mfrac><munderover><mo largeop="true" movablelimits="false" stretchy="false" style="font-size:1.4em">∑</mo><mrow><mi>u</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></munderover><munderover><mo largeop="true" movablelimits="false" stretchy="false" style="font-size:1.4em">∑</mo><mrow><mi>v</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></munderover><mfrac><mrow><mover accent="true"><mi>M</mi><mo>^</mo></mover><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false">)</mo><mo>⁢</mo><msub><mover accent="true"><mi>I</mi><mo>^</mo></mover><mtext>borrosa</mtext></msub><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false">)</mo></mrow><mrow><msup><mrow><mo stretchy="false">[</mo><mover accent="true"><mi>M</mi><mo>^</mo></mover><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo></mrow><mn>2</mn></msup><mo>+</mo><mi>λ</mi></mrow></mfrac><mo>⁢</mo><msup><mi>e</mi><mrow><mn>2</mn><mi>π</mi><mi>i</mi><mo stretchy="false">(</mo><mi>u</mi><mi>x</mi><mo>+</mo><mi>v</mi><mi>y</mi><mo stretchy="false">)</mo><mo>/</mo><mi>N</mi></mrow></msup></mrow></math></div>
       <p>Aquí <i>M̂</i> e <i>Î</i><sub>borrosa</sub> son las <b>transformadas de Fourier</b> de la mancha y de la foto. La transformada de Fourier descompone una función, en este caso una imagen, en una suma de ondas de distintas frecuencias. <i>N</i> es el número de píxeles por lado y <b>λ</b> es la perilla de nitidez.</p>
+      <p>Los problemas inversos están en todas partes. Un escáner médico (tomografía computarizada) reconstruye el interior del cuerpo a partir de radiografías tomadas desde muchos ángulos; los sismólogos deducen cómo es el interior de la Tierra a partir de las ondas de los terremotos; y en 2019 se obtuvo la primera imagen de un agujero negro resolviendo un problema inverso con datos de telescopios de todo el planeta, entre ellos ALMA y APEX, en el norte de Chile. En todos aparece la misma dificultad que viste en el juego: el ruido, y decidir cuánto confiar en los datos. Sigue siendo un área activa de la matemática aplicada, con muchas preguntas abiertas.</p>
+      <p>Para seguir investigando, busca: problemas inversos, deconvolución, regularización de Tikhonov, transformada de Fourier, tomografía computarizada, Event Horizon Telescope.</p>
       <p><b>Simplificaciones.</b> El juego usa imágenes simuladas, una mancha simplificada y un planeta mucho más brillante.</p>
     </div>
     <div class="btns" style="grid-template-columns:1fr;margin-top:10px"><button class="b primary" id="explainClose">Volver al juego</button></div>
@@ -289,11 +298,14 @@ const psfOf = R => { const k = R.toFixed(1); if (!PSF_CACHE.has(k)) PSF_CACHE.se
 // ---------------- etapas ----------------
 const STAGES = [
   {t:'Etapa 1 · Una estrella', p:'Sube la nitidez hasta que la estrella quede como un <b>punto limpio</b>, y márcala.',
-   hint:'💡 Mira cómo el halo se junta en un punto al subir la nitidez. Si empiezan a aparecer <b>puntitos alrededor</b>, te pasaste: es ruido amplificado.'},
+   hint:'💡 Así cambia una estrella al subir la nitidez: el <b>halo se junta en un punto</b>. Si aparecen <b>puntitos alrededor</b>, te pasaste: es ruido amplificado.',
+   demo:{seed:5, half:16, vals:[0, 42, 85], caps:['Nitidez 0<br>halo', 'Nitidez 42<br>un punto ✓', 'Nitidez 85<br>polvo ✗']}},
   {t:'Etapa 2 · Cuenta las estrellas', p:'Ajusta la nitidez y marca cada estrella. <b>No inventes ninguna.</b>',
-   hint:'💡 Sube la nitidez poco a poco. Si ves <b>polvo de puntitos</b> por todas partes, te pasaste: es ruido amplificado. Si una mancha se ve "alargada", quizá son <b>dos estrellas</b>.'},
+   hint:'💡 Dos estrellas muy juntas se ven como <b>una sola mancha</b>. Con la nitidez justa se separan; si te pasas, aparece <b>polvo de ruido</b> que no debes marcar.',
+   demo:{seed:16, half:12, vals:[0, 48, 85], caps:['Nitidez 0<br>una mancha', 'Nitidez 48<br>dos estrellas ✓', 'Nitidez 85<br>polvo ✗']}},
   {t:'Etapa 3 · El planeta escondido', p:'Junto a la estrella brillante se esconde un planeta débil. Márcalo: tienes <b>3 intentos</b>.',
-   hint:'💡 El planeta está dentro del halo de la estrella, muy cerca. Refina la foto lo justo: los anillos que deja la estrella y el ruido pueden engañarte.'}
+   hint:'💡 El planeta está <b>dentro del halo</b> de la estrella, muy cerca. Refina lo justo: si te pasas, los anillos y el ruido engañan.',
+   demo:{seed:3, half:20, vals:[0, 46, 85], caps:['Nitidez 0<br>escondido', 'Nitidez 46<br>planeta ✓', 'Nitidez 85<br>anillos ✗']}}
 ];
 const MARKING = st => st < 2;   // etapas 1 y 2: marcas libres que se pueden mover
 let S = 0, scene = null, view = 'res', marks = [], scored = false, tries = 0;
@@ -345,13 +357,13 @@ function makeScene(stage, seed){
   const peak = Math.max(...stars.filter(s=>!s.host).map(s=>s.f))/(2*Math.PI*0.36);
   return Object.assign({stage, stars, truth, R, noise, peak, seed}, B);
 }
-// restauración con el filtro de Wiener / Tikhonov:  F = conj(H)·G / (|H|² + λ),  usando la mancha que el jugador cree (etapa 2)
+// restauración con el filtro de Wiener / Tikhonov:  F = conj(H)·G / (|H|² + λ)
 const lambdaOf = s => Math.pow(10, -0.6 - 4.6*s/100);
-function restore(s, R){
-  if (s <= 0) return scene.obs;
-  const P = psfOf(R ?? scene.R), lam = lambdaOf(s), re = new Float64Array(N*N), im = new Float64Array(N*N);
+function restore(s, sc = scene){
+  if (s <= 0) return sc.obs;
+  const P = psfOf(sc.R), lam = lambdaOf(s), re = new Float64Array(N*N), im = new Float64Array(N*N);
   for (let i=0;i<N*N;i++){
-    const gr = scene.Ore[i], gi = scene.Oim[i], hr = P.re[i], hi = -P.im[i], d = P.H2[i] + lam;
+    const gr = sc.Ore[i], gi = sc.Oim[i], hr = P.re[i], hi = -P.im[i], d = P.H2[i] + lam;
     re[i] = (hr*gr - hi*gi)/d; im[i] = (hr*gi + hi*gr)/d;
   }
   fft2(re, im, true); return re;
@@ -368,9 +380,19 @@ function colormap(t){   // positivos: negro → azul profundo → blanco → ám
   return stops[stops.length-1][1];
 }
 let current = null;
+// contraste: como hacen los astrónomos, una foto débil se muestra con más contraste para que se vea el halo.
+// Se ajusta al brillo de las estrellas de la imagen mostrada (sin la anfitriona de la etapa 3); desde nitidez ~30
+// el factor queda en 1 y la foto se ve igual que en la v13, con la que se calibraron los rangos de nitidez.
+const BOOST_K = 18;
+function starPeak(arr, sc = scene){
+  let m = 0;
+  for (const s of sc.stars){ if (s.host) continue; const x0 = Math.round(s.x), y0 = Math.round(s.y);
+    for (let j=-2;j<=2;j++) for (let i=-2;i<=2;i++){ const x = x0+i, y = y0+j; if (x>=0 && y>=0 && x<N && y<N && arr[y*N+x] > m) m = arr[y*N+x]; } }
+  return m;
+}
 function render(){
   const arr = view==='obs' ? scene.obs : view==='true' ? scene.fixed : current;
-  const s = scene.peak*0.015, top = Math.asinh(scene.peak*0.3/s);
+  const s = Math.min(scene.peak, BOOST_K*starPeak(arr))*0.015, top = Math.asinh(20);
   for (let i=0;i<N*N;i++){
     const v = arr[i], t = Math.sign(v)*Math.asinh(Math.abs(v)/s)/top, c = colormap(t);
     imgData.data[i*4]=c[0]; imgData.data[i*4+1]=c[1]; imgData.data[i*4+2]=c[2]; imgData.data[i*4+3]=255;
@@ -406,7 +428,7 @@ const SHARP_BEST = 48, PLANET_BEST = 46, TUT_BEST = 42, TUT_LO = 30, TUT_HI = 58
 function setView(v){ view = v; ['vObs','vRes','vTrue'].forEach(id=>$(id).classList.toggle('on', (id==='vObs'&&v==='obs')||(id==='vRes'&&v==='res')||(id==='vTrue'&&v==='true'))); render(); }
 $('vObs').onclick = ()=>setView('obs'); $('vRes').onclick = ()=>setView('res'); $('vTrue').onclick = ()=>setView('true');
 function recompute(){
-  const s = +$('sharp').value; $('sharpVal').textContent = s; current = restore(s);
+  const s = +$('sharp').value; $('sharpVal').textContent = s; current = restore(s); measureNoise();
   if (view!=='res') setView('res'); else render();
 }
 $('sharp').addEventListener('input', recompute);
@@ -443,19 +465,42 @@ function snapPt(x, y){                         // etapa 3: máximo de la foto re
     if (i < 1 || j < 1 || i >= N-1 || j >= N-1 || (i-x)**2 + (j-y)**2 > SNAP_R*SNAP_R) continue; const v = arr[j*N+i]; if (v > bv){ bv = v; bx = i; by = j; } }
   return centroid(bx, by);
 }
-// atractor: el máximo local MÁS CERCANO (no el más brillante) a ≤ 4,5 px que no tenga ya una marca;
-// así, en una estrella doble, tocar dos veces marca las dos. null si no hay ninguno libre.
-function attract(x, y, skip){
-  const arr = current, cands = [];
-  for (let j = Math.floor(y-ATTRACT_R); j <= Math.ceil(y+ATTRACT_R); j++) for (let i = Math.floor(x-ATTRACT_R); i <= Math.ceil(x+ATTRACT_R); i++){
-    if (i < 1 || j < 1 || i >= N-1 || j >= N-1 || (i-x)**2 + (j-y)**2 > ATTRACT_R*ATTRACT_R) continue;
+// atractor: busca máximos locales en un radio amplio (~5 mm con el dedo, ~4 mm con el mouse). Cuentan como "estrella
+// visible" los que se distinguen: ≥ 35 % del más brillante de la zona y ≥ 5 veces el ruido de la foto mostrada.
+// 1) si hay alguno a ≤ 4,5 px del toque, el más cercano sin marca (en una estrella doble, tocar dos veces marca las dos);
+// 2) si no, el más brillante de la zona, pesado por la distancia;
+// 3) si no se distingue nada, como antes: el máximo local libre más cercano a ≤ 4,5 px (el polvo de ruido se puede marcar).
+// Devuelve el punto, 'taken' si lo que se tocó ya tiene marca, o null (la marca queda donde se tocó).
+const SIGNIF = 0.35, SIGMAS = 5, FAR_CSS = {touch:30, mouse:16};
+let noiseSig = 0;
+function measureNoise(){   // ruido de la foto mostrada: mediana de |valor| (casi todos los píxeles son cielo vacío)
+  const a = []; for (let i = 0; i < N*N; i += 7) a.push(Math.abs(current[i]));
+  a.sort((p, q) => p - q); noiseSig = 1.4826*a[a.length >> 1];
+}
+function attract(x, y, skip, farR){
+  const arr = current, R = Math.max(ATTRACT_R, farR || 0), all = []; let top = 0;
+  for (let j = Math.floor(y-R); j <= Math.ceil(y+R); j++) for (let i = Math.floor(x-R); i <= Math.ceil(x+R); i++){
+    if (i < 1 || j < 1 || i >= N-1 || j >= N-1 || (i-x)**2 + (j-y)**2 > R*R) continue;
     const v = arr[j*N+i]; if (v <= 0) continue; let isMax = true;
     for (let dj = -1; dj <= 1 && isMax; dj++) for (let di = -1; di <= 1; di++) if ((di || dj) && arr[(j+dj)*N + i+di] > v){ isMax = false; break; }
-    if (isMax) cands.push({i, j, d:(i-x)**2 + (j-y)**2});
+    if (isMax){ all.push({i, j, v, d:(i-x)**2 + (j-y)**2}); top = Math.max(top, v); }
   }
-  cands.sort((a, b) => a.d - b.d);
-  for (const c of cands){ const q = centroid(c.i, c.j); if (!marks.some(m => m !== skip && Math.hypot(m.x-q.x, m.y-q.y) < 1.5)) return q; }
-  return null;
+  const isFree = q => !marks.some(m => m !== skip && Math.hypot(m.x-q.x, m.y-q.y) < 1.5);
+  const A2 = ATTRACT_R*ATTRACT_R, strong = all.filter(c => c.v >= SIGNIF*top && c.v >= SIGMAS*noiseSig);
+  const near = strong.filter(c => c.d <= A2).sort((a, b) => a.d - b.d);
+  for (const c of near){ const q = centroid(c.i, c.j); if (isFree(q)) return q; }
+  if (near.length) return 'taken';
+  if (strong.length){
+    const w = c => c.v*(1 - 0.5*c.d/(R*R)), best = strong.reduce((a, b) => w(b) > w(a) ? b : a), q = centroid(best.i, best.j);
+    if (isFree(q)) return q;
+    // la más brillante ya tiene marca: si tiene una compañera visible pegada (≤ 7 px), se marca esa (estrella doble)
+    const mates = strong.filter(c => c !== best && (c.i-best.i)**2 + (c.j-best.j)**2 <= 49).sort((a, b) => w(b) - w(a));
+    for (const c of mates){ const m = centroid(c.i, c.j); if (isFree(m)) return m; }
+    return 'taken';
+  }
+  const weak = all.filter(c => c.d <= A2).sort((a, b) => a.d - b.d);
+  for (const c of weak){ const q = centroid(c.i, c.j); if (isFree(q)) return q; }
+  return weak.length ? 'taken' : null;
 }
 function grabIndex(p, pointerType){             // marca bajo el dedo o el mouse
   const rad = Math.max(2.2, (pointerType === 'mouse' ? 8 : 16)/p.w*N);
@@ -463,12 +508,13 @@ function grabIndex(p, pointerType){             // marca bajo el dedo o el mouse
   marks.forEach((m, k) => { const d = Math.hypot(m.x-p.x, m.y-p.y); if (d < bd){ bd = d; best = k; } });
   return best;
 }
-function tapMark(p){
-  const q = attract(p.x, p.y, null);
-  if (q){ marks.push({x:q.x, y:q.y}); render(); return; }
-  if (marks.some(m => Math.hypot(m.x-p.x, m.y-p.y) < ATTRACT_R)) $('mState').innerHTML = 'Esa estrella ya tiene marca. <b>Arrástrala</b> si quieres moverla.';
+function tapMark(p, type){
+  const q = attract(p.x, p.y, null, farRadius(p, type));
+  if (q === 'taken') $('mState').innerHTML = 'Esa estrella ya tiene marca. <b>Arrástrala</b> si quieres moverla.';
+  else if (q){ marks.push({x:q.x, y:q.y}); render(); }
   else { marks.push({x:p.x, y:p.y}); render(); }   // no hay nada brillante cerca: la marca queda donde tocaste
 }
+const farRadius = (p, type) => (type === 'mouse' ? FAR_CSS.mouse : FAR_CSS.touch)/p.w*N;   // en píxeles de la imagen
 function tryPlanet(p){
   const host = scene.stars[0], pl = scene.stars[1], q = snapPt(p.x, p.y);
   if (Math.hypot(host.x-q.x, host.y-q.y) < 4){ $('mState').innerHTML = 'Esa es la estrella brillante. El planeta está <b>cerca</b> de ella.'; return; }
@@ -521,11 +567,11 @@ cv.addEventListener('pointerup', e=>{
     const m = drag.m; drag = null;
     const inside = p.cx >= 0 && p.cy >= 0 && p.cx <= p.w && p.cy <= p.h;
     if (!inside) marks.splice(marks.indexOf(m), 1);   // sacarla de la foto la borra
-    else { const q = attract(p.x, p.y, m); if (q){ m.x = q.x; m.y = q.y; } marks.splice(marks.indexOf(m), 1); marks.push(m); }   // queda como "la última"
+    else { const q = attract(p.x, p.y, m, farRadius(p, was.type)); if (q && q !== 'taken'){ m.x = q.x; m.y = q.y; } marks.splice(marks.indexOf(m), 1); marks.push(m); }   // queda como "la última"
     render(); return;
   }
   if (p.cx < 0 || p.cy < 0 || p.cx > p.w || p.cy > p.h) return;
-  if (MARKING(scene.stage)) tapMark(p); else tryPlanet(p);
+  if (MARKING(scene.stage)) tapMark(p, was.type); else tryPlanet(p);
 });
 cv.addEventListener('pointercancel', ()=>{ press = null; drag = null; $('loupe').style.display = 'none'; render(); });
 if (COARSE) STAGES[2].p += ' <span style="font-size:12px">(Mantén el dedo: una lupa te muestra dónde apuntas.)</span>';
@@ -617,7 +663,26 @@ function showSolution(){
   else { $('sharp').value = PLANET_BEST; recompute(); const pl = scene.stars[1]; pl.miss = false; marks = [{x:pl.x, y:pl.y, hit:true, judged:true}]; scored = true;
     showResult(`<p class="big sol">Respuesta correcta</p><p>El planeta está en el círculo verde. Con nitidez <b>${PLANET_BEST}</b> aparece separado del halo de su estrella.</p>`, false, LEG_PLANET, true); }
 }
-$('hintBtn').onclick = ()=>{ $('mState').innerHTML = STAGES[S].hint; };
+// pista: tres recortes de una foto de ejemplo (no la del jugador) a distinta nitidez, para ver cómo el halo se junta en un punto
+const DEMO_CACHE = {};
+function demoCrops(st){
+  if (DEMO_CACHE[st]) return DEMO_CACHE[st];
+  const d = STAGES[st].demo, sc = makeScene(st, 90001 + d.seed*7919), H = d.half;
+  const a = st === 1 ? sc.stars.find(s => s.pair) : sc.stars[0], b = st === 1 ? sc.stars[sc.stars.indexOf(a)+1] : st === 2 ? sc.stars[1] : a;
+  const cx = Math.round((a.x+b.x)/2), cy = Math.round((a.y+b.y)/2);
+  return DEMO_CACHE[st] = d.vals.map(v => {
+    const arr = restore(v, sc), s = Math.min(sc.peak, BOOST_K*starPeak(arr, sc))*0.015, top = Math.asinh(20);
+    const c = document.createElement('canvas'); c.width = c.height = 2*H; const g = c.getContext('2d'), im = g.createImageData(2*H, 2*H);
+    for (let y = 0; y < 2*H; y++) for (let x = 0; x < 2*H; x++){
+      const X = (cx-H+x+N)%N, Y = (cy-H+y+N)%N, val = arr[Y*N+X], col = colormap(Math.sign(val)*Math.asinh(Math.abs(val)/s)/top), o = (y*2*H+x)*4;
+      im.data[o] = col[0]; im.data[o+1] = col[1]; im.data[o+2] = col[2]; im.data[o+3] = 255; }
+    g.putImageData(im, 0, 0); return c.toDataURL();
+  });
+}
+$('hintBtn').onclick = ()=>{
+  const d = STAGES[S].demo, urls = demoCrops(S);
+  $('mState').innerHTML = STAGES[S].hint + '<span class="hintfig">' + urls.map((u, k) => `<span><img src="${u}" alt=""><small>${d.caps[k]}</small></span>`).join('') + '</span>';
+};
 $('solBtn').onclick = showSolution;
 // las ecuaciones largas van en una sola línea: se achican hasta caber en el ancho disponible
 const EQ_MIN = 12;   // px: por debajo, la ecuación de una línea ya no se lee y se usa la versión en dos líneas
