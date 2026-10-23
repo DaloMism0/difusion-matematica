@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Puertas Abiertas 2026 · Ingeniería Civil Matemática UdeC</title>
+<meta name="description" content="Juegos de matemática aplicada de Ingeniería Civil Matemática, Universidad de Concepción.">
+<meta name="theme-color" content="#005290">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="logos/icm_intro.jpg">
+<style>
+:root{
+  /* Paleta de la Facultad (logo CFM): azul, blanco y negro */
+  --azul:#005290; --azul-oscuro:#003D6B; --azul-claro:#E5EEF5; --azul-medio:#7FA8C8;
+  --blanco:#FFFFFF; --negro:#000000; --gris:#3A3A3A;
+  --icm:#1A52A1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--azul);color:var(--blanco);font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:1.45;min-height:100vh}
+a{color:inherit}
+
+/* ---------- Intro: logo de la carrera a pantalla completa ---------- */
+#intro{position:fixed;inset:0;z-index:10;background:var(--icm);display:flex;align-items:center;justify-content:center;
+  transition:opacity .7s ease, visibility .7s;cursor:pointer}
+#intro img{width:min(125vw,90vh,720px);max-width:none;height:auto;
+  -webkit-mask-image:radial-gradient(closest-side,#000 78%,transparent 100%);mask-image:radial-gradient(closest-side,#000 78%,transparent 100%);
+  animation:aparece 1s ease both;transition:transform .7s ease}
+#intro.sale{opacity:0;visibility:hidden}
+#intro.sale img{transform:scale(.55)}
+@keyframes aparece{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+
+/* ---------- Encabezado ---------- */
+.logos{background:#fff;display:flex;align-items:center;justify-content:center;gap:clamp(10px,3vw,32px);
+  padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top))}
+.logos img{display:block;height:auto;width:auto;min-width:0;flex:0 1 auto}
+.logos .udec{max-height:46px;max-width:26vw}
+.logos .cfm{max-height:28px;max-width:34vw}
+.logos .icm{max-height:60px;max-width:27vw}
+main{max-width:640px;margin:0 auto;padding:24px 16px 32px}
+.titulo{margin-bottom:22px}
+.titulo .evento{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:clamp(28px,8vw,40px);line-height:1.05;color:var(--blanco);letter-spacing:-.01em}
+.titulo .carrera{font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(18px,5vw,22px);margin-top:6px}
+.titulo .facultad{color:var(--azul-claro);opacity:.85;font-size:14px;margin-top:4px}
+.titulo .invita{margin-top:16px;font-size:15px}
+.titulo .invita b{font-weight:700;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- Tarjetas (opción A) ---------- */
+.juegos{list-style:none;display:flex;flex-direction:column;gap:12px}
+.tarjeta{display:flex;gap:14px;align-items:center;text-decoration:none;background:var(--blanco);color:var(--negro);
+  border-radius:14px;padding:12px;box-shadow:0 2px 0 var(--azul-oscuro);transition:background .15s, transform .15s}
+a.tarjeta:active{transform:scale(.985)}
+@media (hover:hover){a.tarjeta:hover{background:var(--azul-claro)}}
+a.tarjeta:focus-visible{outline:3px solid var(--blanco);outline-offset:3px}
+.mini{flex:none;width:72px;height:72px;border-radius:10px;background:var(--azul);display:block}
+.info{min-width:0;flex:1}
+.nombre{font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:17px;line-height:1.2;color:var(--negro)}
+.frase{color:var(--gris);font-size:14px;margin-top:3px}
+.pronto{opacity:.75}
+.aviso{flex:none;font-size:12px;font-weight:700;color:var(--blanco);background:var(--azul);border-radius:999px;padding:3px 9px}
+.flecha{flex:none;color:var(--azul);font-size:22px;font-weight:700}
+
+footer{max-width:640px;margin:0 auto;padding:8px 16px calc(28px + env(safe-area-inset-bottom));color:var(--azul-claro);opacity:.85;font-size:13px;text-align:center}
+footer p+p{margin-top:6px}
+
+/* Entrada escalonada de la portada después del logo */
+.entra{opacity:0;transform:translateY(14px)}
+body.lista .entra{opacity:1;transform:none;transition:opacity .5s ease, transform .5s ease;transition-delay:calc(var(--i,0) * 70ms)}
+@media (prefers-reduced-motion:reduce){
+  #intro img{animation:none}
+  .entra,body.lista .entra{transition:none;transform:none}
+}
+</style>
+</head>
+<body>
+
+<div id="intro" aria-hidden="true"><img src="logos/icm_intro.jpg" alt="" width="1500" height="1500"></div>
+
+<header class="logos entra" style="--i:0">
+  <img class="udec" src="logos/udec.png" alt="Universidad de Concepción" width="299" height="120">
+  <img class="cfm" src="logos/cfm.png" alt="Facultad de Ciencias Físicas y Matemáticas" width="537" height="96">
+  <img class="icm" src="logos/icm.png" alt="Ingeniería Civil Matemática" width="427" height="240">
+</header>
+
+<main>
+  <div class="titulo">
+    <h1 class="evento entra" style="--i:1">Puertas Abiertas 2026</h1>
+    <p class="carrera entra" style="--i:2">Ingeniería Civil Matemática</p>
+    <p class="facultad entra" style="--i:2">Facultad de Ciencias Físicas y Matemáticas · Universidad de Concepción</p>
+    <p class="invita entra" style="--i:3">Elige un juego y resuelve un problema real con <b>matemática</b>.</p>
+  </div>
+
+  <ul class="juegos" id="juegos"></ul>
+</main>
+
+<footer class="entra" style="--i:10">
+  <p>Juegos creados por Ingeniería Civil Matemática, Universidad de Concepción.</p>
+</footer>
+
+<script>
+// Cada juego: archivo publicado, nombre, frase y miniatura (SVG 72×72, en blanco sobre el azul de la Facultad).
+// pronto: true muestra la tarjeta sin enlace, con el aviso «Muy pronto»; se quita cuando el archivo ya está publicado.
+const B = "#FFFFFF", M = "#7FA8C8";   // blanco y azul medio
+const JUEGOS = [
+  { archivo: "arregla_la_foto_del_hubble.html", nombre: "Arregla la foto del Hubble",
+    frase: "Rescata las fotos borrosas del telescopio espacial.",
+    mini: `<circle cx="36" cy="36" r="22" fill="${B}" opacity=".12"/><circle cx="36" cy="36" r="13" fill="${B}" opacity=".25"/>
+           <circle cx="36" cy="36" r="4" fill="${B}"/><circle cx="16" cy="18" r="1.6" fill="${B}"/><circle cx="58" cy="22" r="1.2" fill="${B}"/>
+           <circle cx="54" cy="56" r="1.8" fill="${B}"/><circle cx="14" cy="54" r="1" fill="${B}"/>` },
+  { archivo: "la_ruta_de_la_ambulancia.html", nombre: "La ruta de la ambulancia",
+    frase: "Encuentra el camino más rápido al hospital.",
+    mini: `<g stroke="${M}" stroke-width="2" opacity=".6"><path d="M12 16H60M12 36H60M12 56H60M16 12V60M36 12V60M56 12V60"/></g>
+           <path d="M16 56H36V36H56V16" fill="none" stroke="${B}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+           <circle cx="16" cy="56" r="4.5" fill="${B}"/><rect x="51" y="11" width="10" height="10" rx="2" fill="${B}"/>
+           <path d="M56 13v6M53 16h6" stroke="#005290" stroke-width="2"/>` },
+  { archivo: "ala_avion.html", nombre: "Ala del avión", pronto: true,
+    frase: "Cruza el país gastando el mínimo de combustible.",
+    mini: `<path d="M10 44C24 30 46 28 62 34C46 38 28 42 10 44Z" fill="${B}"/>
+           <g stroke="${M}" stroke-width="1.5" fill="none"><path d="M8 26C24 18 46 18 64 24"/><path d="M8 54C24 52 46 50 64 46"/></g>` },
+  { archivo: "logistica_maritima.html", nombre: "Logística marítima",
+    frase: "Carga el barco sin que se vuelque en la tormenta.",
+    mini: `<path d="M8 46H64L56 58H16Z" fill="${B}"/>
+           <g fill="${M}"><rect x="16" y="36" width="12" height="10"/><rect x="44" y="36" width="12" height="10"/><rect x="37" y="26" width="12" height="10"/></g>
+           <g fill="${B}"><rect x="30" y="36" width="12" height="10"/><rect x="23" y="26" width="12" height="10"/></g>
+           <path d="M6 62C14 58 20 66 28 62S42 58 50 62S60 66 66 62" stroke="${M}" stroke-width="1.5" fill="none"/>` },
+  { archivo: "yareta.html", nombre: "Yareta",
+    frase: "Plantas milenarias del altiplano que compiten por el agua.",
+    mini: (() => { let s = "", r = 7; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
+             const d = Math.hypot(i - 3.5, j - 3.5), v = (i * 7 + j * 13) % 5;
+             if (d < 3.2 && v) s += `<rect x="${8 + i * r}" y="${8 + j * r}" width="${r - 1}" height="${r - 1}" rx="1.5" fill="${v > 2 ? B : M}"/>`;
+           } return s; })() },
+];
+
+const lista = document.getElementById("juegos");
+lista.innerHTML = JUEGOS.map((j, k) => `
+  <li class="juego entra" style="--i:${k + 4}">
+    <${j.pronto ? 'div class="tarjeta pronto"' : `a class="tarjeta" href="${j.archivo}"`}>
+      <svg class="mini" viewBox="0 0 72 72" aria-hidden="true">${j.mini}</svg>
+      <span class="info">
+        <span class="nombre" style="display:block">${j.nombre}</span>
+        <span class="frase" style="display:block">${j.frase}</span>
+      </span>
+      ${j.pronto ? '<span class="aviso">Muy pronto</span>' : '<span class="flecha" aria-hidden="true">›</span>'}
+    </${j.pronto ? "div" : "a"}>
+  </li>`).join("");
+
+// Intro: el logo azul se muestra una vez por visita; al volver desde un juego se va directo a la lista.
+const intro = document.getElementById("intro");
+let yaVisto = false;
+try { yaVisto = sessionStorage.getItem("pa2026-intro") === "1"; } catch (e) {}
+const reducido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function mostrarLista() {
+  if (document.body.classList.contains("lista")) return;
+  intro.classList.add("sale");
+  document.body.classList.add("lista");
+  try { sessionStorage.setItem("pa2026-intro", "1"); } catch (e) {}
+}
+
+if (yaVisto) {
+  intro.remove();
+  document.body.classList.add("lista");
+} else {
+  intro.addEventListener("click", mostrarLista);
+  const img = intro.querySelector("img");
+  const programar = () => setTimeout(mostrarLista, reducido ? 900 : 2000);
+  if (img.complete) programar(); else { img.addEventListener("load", programar); img.addEventListener("error", programar); }
+}
+</script>
+</body>
+</html>

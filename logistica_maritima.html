@@ -294,7 +294,7 @@
         <p><b>Un problema de optimización combinatoria.</b> Las decisiones son discretas: cada contenedor va en un lugar u otro. Las soluciones son finitas, pero explotan: con <i>n</i> contenedores y <i>n</i> lugares hay <i>n</i>! = 1 · 2 · 3 ⋯ <i>n</i> ordenamientos. Elegir la mejor combinación entre tantas es el tema de la <b>optimización combinatoria</b>, centro de la investigación de operaciones.</p>
         <p><b>Cómo se resuelve sin revisar todo.</b> El método exacto más usado, sobre modelos de programación lineal entera, es <b><i>branch and bound</i></b> (ramificación y acotamiento). Arma la distribución contenedor por contenedor, como un árbol de decisiones. En cada rama calcula una <b>cota</b>: una estimación garantizada de lo mejor que se puede lograr siguiendo por ahí. Si la cota ya es peor que la mejor distribución conocida, descarta la rama entera sin revisarla. Así asegura el óptimo revisando solo una pequeña parte de las opciones.</p>
         <p>Cuando el problema es enorme se usan <b>heurísticas</b>, que encuentran muy buenas soluciones rápido, aunque sin garantía de que sean las mejores. La <b>búsqueda local</b> parte de una distribución y la mejora con cambios pequeños (intercambiar dos contenedores, mover uno), pero puede quedar atrapada donde ningún cambio pequeño ayuda. <b><i>Simulated annealing</i></b> lo evita aceptando a veces un cambio que empeora el costo en Δ, con probabilidad e<sup>−Δ/T</sup>. La “temperatura” <i>T</i> baja de a poco: al principio explora con libertad y al final solo acepta mejoras, como un metal que, enfriado lentamente (<i>annealing</i>), ordena sus átomos en una estructura estable.</p>
-        <p>El botón «Ver la distribución óptima» usa <i>simulated annealing</i>: prueba 15 000 cambios al azar, repite todo desde 8 puntos de partida y se queda con la mejor, en una fracción de segundo. En la industria se combinan ambos caminos: la heurística encuentra rápido una buena distribución y las cotas dicen cuánto podría faltar para el óptimo, la <b>brecha de optimalidad</b>.</p>
+        <p>El botón «Ver la distribución óptima» usa <i>simulated annealing</i> en dos niveles: busca solo la forma de la carga y, para cada forma, reparte los pesos dejando los más pesados cerca del centro. Prueba 12 000 cambios, repite todo desde 16 puntos de partida y se queda con la mejor, en una fracción de segundo. En la industria se combinan ambos caminos: la heurística encuentra rápido una buena distribución y las cotas dicen cuánto podría faltar para el óptimo, la <b>brecha de optimalidad</b>.</p>
       </div>
       <p class="refs">Para seguir investigando, puedes buscar: centro de gravedad, teorema de Steiner (de los ejes paralelos), optimización combinatoria, <i>branch and bound</i>, <i>simulated annealing</i> y planificación de la estiba de contenedores (<i>container stowage planning</i>).</p>
       <div class="close-row"><button class="b primary" id="explainClose">Volver al juego</button></div>
@@ -1222,7 +1222,7 @@ return {play, stop, skip, tierOf, intro};
     for(const p of placed){ const [x,y,z]=centerOf(p.level,p.L,p.Wd,p.rot); m += p.w*((x-X)**2+(y-Y)**2+(z-Z)**2); }
     return m/sw;
   }
-  const K_DISP = 0.05;
+  const K_DISP = 0.15;   // v5: con 0.05 el 40 % de los óptimos del nivel Medio quedaba en 2–3 bloques sueltos (ver HISTORIAL)
   function costOf(placed){
     return distToTargetCenter(placed) + K_DISP*dispersionOf(placed);
   }
@@ -1239,57 +1239,89 @@ return {play, stop, skip, tierOf, intro};
     return s; // 12 non-overlapping slots in the normal orientation (guarantees up to 24 total fit)
   }
 
-  function greedyInitial(weights){
-    const sorted = weights.slice().sort((a,b)=>b-a);
-    const placed=[];
-    const slots0 = standardSlots().map(([L,Wd])=>{ const [x,y]=centerOf(0,L,Wd,0); return {L,Wd,d:Math.hypot(x-CENTER[0],y-CENTER[1])}; }).sort((a,b)=>a.d-b.d);
-    const slots1 = standardSlots().map(([L,Wd])=>{ const [x,y]=centerOf(1,L,Wd,0); return {L,Wd,d:Math.hypot(x-CENTER[0],y-CENTER[1])}; }).sort((a,b)=>a.d-b.d);
-    let i0=0,i1=0;
-    for(const w of sorted){
-      if(i0<slots0.length){ const s=slots0[i0++]; placed.push({w,level:0,L:s.L,Wd:s.Wd,rot:0}); }
-      else throw new Error("ship full");
+  // v5: solver en dos niveles (ver HISTORIAL). El simulated annealing busca solo la FORMA de la
+  // carga (dónde va cada contenedor y si va girado); para cada forma, los pesos se reparten
+  // aparte: los más pesados en los lugares más cercanos al centro y luego intercambios que
+  // bajen el costo. El costo es el mismo de costOf, calculado con sumas:
+  // cost = d + K·(Σw·r²/W − d²), con r medido desde el centro de la bodega.
+  // Movimientos de forma: correr o girar un contenedor, llevarlo a cualquier lugar libre,
+  // trasladar toda la carga, y girar un par que forma un cuadrado de 4×4 (el único que cambia
+  // el embaldosado cuando el piso está lleno, como en el nivel difícil).
+  // Al final, un pulido prueba cada contenedor en todos los lugares libres.
+  function solve(weights, iterations=12000, restarts=16){
+    const n=weights.length, ws=Float64Array.from(weights.slice().sort((a,b)=>b-a)), WT=weights.reduce((a,b)=>a+b,0);
+    const ANCH=allAnchors(), NA=ANCH.length, SHIFTS=[[1,0],[-1,0],[0,1],[0,-1]];
+    const L=new Int8Array(n), Wd=new Int8Array(n), R=new Int8Array(n), occ=new Int8Array(LEN_H*WID_H);
+    const px=new Float64Array(n), py=new Float64Array(n), q=new Float64Array(n), asg=new Int32Array(n), idx=[...Array(n).keys()];
+    const costS=(sx,sy,sq)=>{ const X=sx/WT, Y=sy/WT, d2=X*X+Y*Y; return Math.sqrt(d2)+K_DISP*(sq/WT-d2); };
+    function paint(i,v){ const fl=R[i]?2:4, fw=R[i]?4:2; for(let b=0;b<fw;b++){ const row=(Wd[i]+b)*LEN_H+L[i]; for(let a=0;a<fl;a++) occ[row+a]=v; } }
+    function isFree(l,wd,r){ const fl=r?2:4, fw=r?4:2; if(l<0||wd<0||l+fl>LEN_H||wd+fw>WID_H) return false;
+      for(let b=0;b<fw;b++){ const row=(wd+b)*LEN_H+l; for(let a=0;a<fl;a++) if(occ[row+a]!==-1) return false; } return true; }
+    function put(i,l,wd,r){ L[i]=l; Wd[i]=wd; R[i]=r; px[i]=(l+(r?1:2))*H-CENTER[0]; py[i]=(wd+(r?2:1))*H-CENTER[1]; q[i]=px[i]*px[i]+py[i]*py[i]; paint(i,i); }
+    // reparto de pesos para la forma actual (asg[i] = índice en ws del peso que va en el lugar i)
+    function evaluate(){
+      idx.sort((a,b)=>q[a]-q[b]); for(let k=0;k<n;k++) asg[idx[k]]=k;
+      let sx=0, sy=0, sq=0; for(let i=0;i<n;i++){ const w=ws[asg[i]]; sx+=w*px[i]; sy+=w*py[i]; sq+=w*q[i]; }
+      let cur=costS(sx,sy,sq), imp=true;
+      while(imp){ imp=false;
+        for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){ const dw=ws[asg[i]]-ws[asg[j]]; if(dw===0) continue;
+          const nsx=sx+dw*(px[j]-px[i]), nsy=sy+dw*(py[j]-py[i]), nsq=sq+dw*(q[j]-q[i]), c=costS(nsx,nsy,nsq);
+          if(c<cur-1e-12){ const t=asg[i]; asg[i]=asg[j]; asg[j]=t; sx=nsx; sy=nsy; sq=nsq; cur=c; imp=true; } } }
+      return cur;
     }
-    return placed;
-  }
+    function nearAnchor(i){ let r=R[i], l=L[i], wd=Wd[i];
+      if(Math.random()<0.3){ r=1-r; l+=r?1:-1; wd+=r?-1:1; }   // girar en su sitio
+      l+=((Math.random()*5)|0)-2; wd+=((Math.random()*5)|0)-2; return [l,wd,r]; }
+    function pairOf(i){
+      if(R[i]===0){ for(const dw of [2,-2]){ const wd=Wd[i]+dw; if(wd<0||wd+2>WID_H) continue; const j=occ[wd*LEN_H+L[i]];
+          if(j>=0&&j!==i&&R[j]===0&&L[j]===L[i]&&Wd[j]===wd){ const w0=Math.min(Wd[i],wd); return [j,[L[i],w0,1],[L[i]+2,w0,1]]; } } }
+      else { for(const dl of [2,-2]){ const l=L[i]+dl; if(l<0||l+2>LEN_H) continue; const j=occ[Wd[i]*LEN_H+l];
+          if(j>=0&&j!==i&&R[j]===1&&Wd[j]===Wd[i]&&L[j]===l){ const l0=Math.min(L[i],l); return [j,[l0,Wd[i],0],[l0,Wd[i]+2,0]]; } } }
+      return null; }
+    function canShift(dl,dw){ for(let i=0;i<n;i++){ const fl=R[i]?2:4, fw=R[i]?4:2, l=L[i]+dl, wd=Wd[i]+dw; if(l<0||wd<0||l+fl>LEN_H||wd+fw>WID_H) return false; } return true; }
+    function doShift(dl,dw){ for(let i=0;i<n;i++) paint(i,-1); for(let i=0;i<n;i++) put(i,L[i]+dl,Wd[i]+dw,R[i]); }
 
-  function solve(weights, iterations=15000, restarts=8){
-    const anchorsAll = [
-      ...allAnchors().map(([L,Wd,rot])=>({level:0,L,Wd,rot})),   // v3: solo el piso
-    ];
+    const slots=standardSlots();
     let best=null, bestCost=Infinity;
-    for(let r=0;r<restarts;r++){
-      let placed = greedyInitial(weights.slice().sort(()=>Math.random()-0.5));
-      let cost = costOf(placed);
-      let temp=1.0;
-      for(let it=0; it<iterations; it++){
-        temp*=0.9995;
-        let trial;
-        if(placed.length>=2 && Math.random()<0.5){
-          const i1 = Math.floor(Math.random()*placed.length);
-          let i2 = Math.floor(Math.random()*placed.length);
-          if(i2===i1) i2=(i2+1)%placed.length;
-          trial = placed.map((p,idx)=>{
-            if(idx===i1) return {w:p.w, level:placed[i2].level, L:placed[i2].L, Wd:placed[i2].Wd, rot:placed[i2].rot};
-            if(idx===i2) return {w:p.w, level:placed[i1].level, L:placed[i1].L, Wd:placed[i1].Wd, rot:placed[i1].rot};
-            return p;
-          });
-        } else {
-          const pi = Math.floor(Math.random()*placed.length);
-          const cand = anchorsAll[Math.floor(Math.random()*anchorsAll.length)];
-          const others = placed.filter((_,i)=>i!==pi);
-          const occOthers = rebuildOcc(others);
-          if(!canPlaceGiven(occOthers, cand.level, cand.L, cand.Wd, cand.rot)) continue;
-          trial = others.concat([{w:placed[pi].w, level:cand.level, L:cand.L, Wd:cand.Wd, rot:cand.rot}]);
-        }
-        if(!isFullyValid(trial)) continue;
-        const newCost = costOf(trial);
-        if(newCost<=cost || Math.random()<Math.exp(-(newCost-cost)/Math.max(temp*0.03,1e-6))){
-          placed=trial; cost=newCost;
+    for(let rs=0; rs<restarts; rs++){
+      occ.fill(-1);
+      const order=slots.slice().sort(()=>Math.random()-0.5);
+      for(let i=0;i<n;i++) put(i,order[i][0],order[i][1],0);
+      let cur=evaluate();
+      const T0=0.05, T1=0.0003, k=Math.pow(T1/T0,1/iterations);
+      let T=T0;
+      const accept=d=>d<=0 || Math.random()<Math.exp(-d/T);
+      for(let it=0; it<iterations; it++, T*=k){
+        const u=Math.random(), i=(Math.random()*n)|0;
+        if(u<0.85){   // mover un contenedor (casi siempre cerca)
+          const a=Math.random()<0.7 ? nearAnchor(i) : ANCH[(Math.random()*NA)|0];
+          const l0=L[i], w0=Wd[i], r0=R[i]; paint(i,-1);
+          if(!isFree(a[0],a[1],a[2])){ paint(i,i); continue; }
+          put(i,a[0],a[1],a[2]); const c=evaluate();
+          if(accept(c-cur)) cur=c; else { paint(i,-1); put(i,l0,w0,r0); }
+        } else if(u<0.93){   // trasladar toda la carga
+          const [dl,dw]=SHIFTS[(Math.random()*4)|0]; if(!canShift(dl,dw)) continue;
+          doShift(dl,dw); const c=evaluate();
+          if(accept(c-cur)) cur=c; else doShift(-dl,-dw);
+        } else {   // girar un par que forma un cuadrado
+          const p=pairOf(i); if(!p) continue;
+          const j=p[0], si=[L[i],Wd[i],R[i]], sj=[L[j],Wd[j],R[j]];
+          paint(i,-1); paint(j,-1); put(i,...p[1]); put(j,...p[2]); const c=evaluate();
+          if(accept(c-cur)) cur=c; else { paint(i,-1); paint(j,-1); put(i,...si); put(j,...sj); }
         }
       }
-      if(cost<bestCost){ bestCost=cost; best=placed.slice(); }
+      // pulido: cada contenedor a su mejor lugar libre, y traslados, hasta que nada mejore
+      let imp=true;
+      while(imp){ imp=false;
+        for(let i=0;i<n;i++){ const l0=L[i], w0=Wd[i], r0=R[i]; paint(i,-1); let bc=cur-1e-12, ba=null;
+          for(let a=0;a<NA;a++){ const A=ANCH[a]; if(!isFree(A[0],A[1],A[2])) continue; put(i,A[0],A[1],A[2]); const c=evaluate(); paint(i,-1); if(c<bc){ bc=c; ba=A; } }
+          if(ba){ put(i,ba[0],ba[1],ba[2]); cur=bc; imp=true; } else put(i,l0,w0,r0); }
+        for(const [dl,dw] of SHIFTS){ if(!canShift(dl,dw)) continue; doShift(dl,dw); const c=evaluate(); if(c<cur-1e-12){ cur=c; imp=true; } else doShift(-dl,-dw); }
+      }
+      cur=evaluate();
+      if(cur<bestCost-1e-12){ bestCost=cur; best=[...Array(n)].map((_,i)=>({w:ws[asg[i]],level:0,L:L[i],Wd:Wd[i],rot:R[i]})); }
     }
-    return {placed:best, cost:bestCost};
+    return {placed:best, cost:costOf(best)};
   }
 
   function randWeights(n, min=5, max=30){
