@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>Grupo de estudios de modelos estocásticos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Layout: banda azul superior con la simulación de Langevin; cuerpo blanco sin cajas, secciones separadas por filetes finos. Paleta institucional (azul y blanco), un solo aspecto. */
+:root{
+  --blue:#1E4F96; --blue-deep:#173C76; --sky:#46B7DE; --white:#FFFFFF;
+  --ink:#16243A; --muted:#566377; --rule:#D5DEEA;
+  --display:"Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  color-scheme:light;
+}
+body{background:var(--white);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.5}
+.inner{max-width:760px;margin:0 auto;
+  padding-left:max(20px, env(safe-area-inset-left, 0px));padding-right:max(20px, env(safe-area-inset-right, 0px))}
+
+/* Logos */
+.logos .inner{padding-block:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 28px}
+.logos{--h:60px}
+.logos img{height:var(--h);width:auto;display:block}
+/* El PNG de la UdeC trae margen blanco: se recorta a su contenido (727×289 dentro de 906×463) */
+.logo-crop{height:var(--h);width:calc(var(--h)*727/289);overflow:hidden;flex:none}
+.logo-crop img{height:calc(var(--h)*463/289);max-width:none;margin-top:calc(var(--h)*-93/289);margin-left:calc(var(--h)*-88/289)}
+
+/* Banda superior con bandada de estorninos */
+header{background:var(--blue);color:var(--white);position:relative;overflow:hidden;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact}
+header svg{position:absolute;inset:0;width:100%;height:100%}
+header .inner{position:relative;padding-block:56px 64px;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase}
+header .eyebrow{color:var(--sky)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(38px,8vw,64px);line-height:1;margin:0;text-wrap:balance}
+.lede{margin:4px 0 0;font-size:20px;max-width:46ch;color:#DCE7F5}
+
+/* Cuerpo */
+main .inner{padding-block:12px 40px;display:flex;flex-direction:column}
+section{padding-block:26px;border-bottom:1px solid var(--rule)}
+section:last-child{border-bottom:0}
+h2{font-family:var(--display);font-weight:700;font-size:28px;color:var(--blue);margin:0 0 12px}
+p{margin:0;max-width:60ch}
+
+.areas{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 28px;
+  font-family:var(--display);font-weight:600;font-size:23px}
+.areas li{display:flex;align-items:center;gap:10px}
+.areas li::before{content:"";width:9px;height:9px;background:var(--sky);border-radius:50%}
+
+ul.plain{margin:12px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+ul.plain li::marker{color:var(--blue)}
+
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.facts > div{min-width:0;display:flex;flex-direction:column;gap:2px}
+.label{font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+.people{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.person{min-width:0;display:flex;flex-direction:column}
+.name{font-family:var(--display);font-weight:700;font-size:22px}
+.mail{color:var(--blue);overflow-wrap:anywhere;user-select:all}
+
+footer{border-top:4px solid var(--blue)}
+/* Botón que parece enlace y ventanas emergentes */
+.linkbtn{font:inherit;color:var(--blue);background:none;border:0;padding:0;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:var(--sky);text-decoration-thickness:2px;text-underline-offset:4px}
+.linkbtn:hover{color:var(--blue-deep)}
+.course{font-family:var(--display);font-weight:700;font-size:23px;line-height:1.2;margin-top:10px;display:block}
+.hint{color:var(--muted);font-size:15px;margin-top:6px}
+.play{margin-top:14px;align-self:flex-start;display:inline-flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:19px;
+  color:var(--blue);background:var(--white);border:0;border-radius:99px;padding:10px 22px 10px 16px;cursor:pointer}
+.play::before{content:"";width:0;height:0;border-left:13px solid var(--blue);border-top:8px solid transparent;border-bottom:8px solid transparent}
+.play:hover{background:#EAF4FB}
+dialog{border:0;border-radius:14px;padding:0;max-width:min(92vw,680px);color:var(--ink);box-shadow:0 20px 60px rgba(10,20,40,.35)}
+dialog::backdrop{background:rgba(12,22,40,.6)}
+dialog .box{padding:28px 28px 26px;display:flex;flex-direction:column;gap:12px}
+dialog h3{font-family:var(--display);font-weight:700;font-size:26px;line-height:1.15;color:var(--blue);margin:0;padding-right:36px}
+dialog .close{position:absolute;top:10px;right:12px;width:36px;height:36px;border:0;background:none;font-size:28px;line-height:1;color:var(--muted);cursor:pointer;border-radius:50%}
+dialog .close:hover{background:#EEF2F7;color:var(--ink)}
+#dlg-video{max-width:min(96vw,1200px);width:96vw;background:#0d1117}
+#dlg-video .close{color:#cfd6e2;z-index:2}
+#dlg-video .close:hover{background:rgba(255,255,255,.12);color:#fff}
+#dlg-video{max-height:94vh;overflow:auto}
+#dlg-video .refs{padding:22px 28px 28px;color:#d7deea;font-size:16px;line-height:1.45}
+#dlg-video .refs h3{color:#fff;font-size:22px;margin:0 0 12px;padding:0}
+#dlg-video .refs ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px}
+#dlg-video .refs .p{display:block;font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--sky)}
+#dlg-video .refs em{color:#fff}
+#dlg-video .refs a{color:#8fd3ef;overflow-wrap:anywhere}
+#dlg-video iframe{display:block;width:100%;height:calc(min(96vw,1200px)*9/16 + 190px);border:0;max-height:90vh}
+
+
+@media (max-width:600px){
+  .facts,.people{grid-template-columns:1fr}
+  .logos{--h:30px}
+  .logos .inner{flex-wrap:nowrap;gap:12px;justify-content:space-between}
+  .logos img{max-width:31vw;object-fit:contain}
+  header .inner{padding-block:40px 46px}
+  .play{font-size:17px}
+  dialog .box{padding:24px 20px 22px}
+  #dlg-video .refs{padding:18px 18px 24px;font-size:15px}
+}
+</style>
+
+<div class="logos">
+  <div class="inner">
+    <div class="logo-crop"><img src="imagenes/logo_udec1.png" alt="Universidad de Concepción"></div>
+    <img src="imagenes/fcfm.png" alt="Facultad de Ciencias Físicas y Matemáticas">
+    <img src="imagenes/icm-color-1296.png" alt="Ingeniería Civil Matemática">
+  </div>
+</div>
+
+<header>
+  <svg id="flock" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+  <div class="inner">
+    <span class="eyebrow">En formación · Pregrado y postgrado</span>
+    <h1>Grupo de estudios de modelos estocásticos</h1>
+    <p class="lede">Modelos estocásticos, su implementación computacional y sus aplicaciones.</p>
+    <button class="play" type="button" data-open="dlg-video">Descubre el área (6 min)</button>
+  </div>
+</header>
+
+<main>
+  <div class="inner">
+
+    <section>
+      <h2>Áreas de investigación</h2>
+      <ul class="areas">
+        <li>Ecuaciones diferenciales estocásticas</li>
+        <li>Optimización estocástica</li>
+        <li>Machine learning</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Objetivo</h2>
+      <p>Formar un grupo de estudios donde los estudiantes aprendan a investigar en matemática: leer artículos, plantear preguntas, desarrollar resultados propios, redactarlos y exponerlos, usando IA generativa como apoyo en esas tareas.</p>
+    </section>
+
+    <section>
+      <h2>Primera etapa</h2>
+      <p>El grupo de estudios está en formación. En esta primera etapa queremos conocer a los estudiantes interesados: qué temas les atraen, qué han estudiado y qué les gustaría aprender. Con eso definiremos los primeros temas de trabajo, para comenzar de lleno en el primer semestre de 2027 junto con el curso electivo que estamos proponiendo:</p>
+      <button class="linkbtn course" type="button" data-open="dlg-curso">Introducción a las ecuaciones diferenciales estocásticas y sus aproximaciones numéricas</button>
+      <p class="hint">Haz clic en el nombre del curso para ver el resumen.</p>
+    </section>
+
+    <section>
+      <h2>Modalidad</h2>
+      <p>Cuando el grupo esté formado, habrá una reunión por semana, presencial o virtual. En las sesiones:</p>
+      <ul class="plain">
+        <li>Los estudiantes exponen artículos.</li>
+        <li>Cada participante cuenta sus avances y dificultades, incluidas sus asignaturas.</li>
+        <li>Los profesores presentan temas de actualidad.</li>
+        <li>Se trabaja en forma colaborativa entre estudiantes de distintos niveles.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Contacto</h2>
+      <p style="margin-bottom:14px">Escríbenos y cuéntanos qué te interesa.</p>
+      <div class="people">
+        <div class="person"><span class="name">Mario Muñoz</span><span class="mail">marioamunoz@udec.cl</span></div>
+        <div class="person"><span class="name">Kerlyns Martínez</span><span class="mail">kermartinez@udec.cl</span></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer></footer>
+
+<dialog id="dlg-curso" aria-labelledby="dlg-curso-t">
+  <button class="close" type="button" aria-label="Cerrar">×</button>
+  <div class="box">
+    <span class="label">Electivo · Semestre 2027-1</span>
+    <h3 id="dlg-curso-t">Introducción a las ecuaciones diferenciales estocásticas y sus aproximaciones numéricas</h3>
+    <p>El curso presenta una introducción a la teoría de las ecuaciones diferenciales estocásticas y su aproximación numérica. La idea es precisar qué se entiende por una solución de una ecuación diferencial estocástica, distinguiendo entre soluciones fuertes locales o globales en tiempo, y soluciones débiles. Se estudia también la conexión entre las soluciones de estas ecuaciones y las ecuaciones en derivadas parciales de Kolmogorov, y se desarrollan las herramientas necesarias para analizar la convergencia de métodos numéricos clásicos. El curso contempla la implementación computacional de los contenidos estudiados y la resolución numérica de problemas de modelación.</p>
+  </div>
+</dialog>
+
+<dialog id="dlg-video" aria-label="Video del grupo de estudios">
+  <button class="close" type="button" aria-label="Cerrar">×</button>
+  <iframe title="Video del grupo de estudios" data-src="video.html" allow="autoplay; fullscreen" allowfullscreen></iframe>
+  <div class="refs">
+    <h3>Artículos del video</h3>
+    <ol>
+      <li><span class="p">Reprogramación celular</span>G. Schiebinger et al. (2019). <em>Optimal-transport analysis of single-cell gene expression identifies developmental trajectories in reprogramming.</em> Cell, 176(4), 928–943. <a href="https://doi.org/10.1016/j.cell.2019.01.006" target="_blank" rel="noopener">https://doi.org/10.1016/j.cell.2019.01.006</a></li>
+      <li><span class="p">El vuelo de los estorninos</span>M. Ballerini et al. (2008). <em>Interaction ruling animal collective behavior depends on topological rather than metric distance: Evidence from a field study.</em> PNAS, 105(4), 1232–1237. <a href="https://doi.org/10.1073/pnas.0711437105" target="_blank" rel="noopener">https://doi.org/10.1073/pnas.0711437105</a></li>
+      <li><span class="p">El vuelo de los estorninos</span>A. Cavagna, A. Cimarelli, I. Giardina, G. Parisi, R. Santagati, F. Stefanini, M. Viale (2010). <em>Scale-free correlations in starling flocks.</em> PNAS, 107(26), 11865–11870. <a href="https://doi.org/10.1073/pnas.1005766107" target="_blank" rel="noopener">https://doi.org/10.1073/pnas.1005766107</a></li>
+      <li><span class="p">La maldición de la dimensionalidad</span>J. Han, A. Jentzen, W. E (2018). <em>Solving high-dimensional partial differential equations using deep learning.</em> PNAS, 115(34), 8505–8510. <a href="https://doi.org/10.1073/pnas.1718942115" target="_blank" rel="noopener">https://doi.org/10.1073/pnas.1718942115</a></li>
+      <li><span class="p">Diseñar proteínas nuevas</span>J. L. Watson et al. (2023). <em>De novo design of protein structure and function with RFdiffusion.</em> Nature, 620, 1089–1100. <a href="https://doi.org/10.1038/s41586-023-06415-8" target="_blank" rel="noopener">https://doi.org/10.1038/s41586-023-06415-8</a></li>
+      <li><span class="p">Pronóstico probabilístico del clima</span>I. Price et al. (2025). <em>Probabilistic weather forecasting with machine learning.</em> Nature, 637, 84–90. <a href="https://doi.org/10.1038/s41586-024-08252-9" target="_blank" rel="noopener">https://doi.org/10.1038/s41586-024-08252-9</a></li>
+      <li><span class="p">Entrenar redes neuronales</span>S. Malladi, K. Lyu, A. Panigrahi, S. Arora (2022). <em>On the SDEs and scaling rules for adaptive gradient algorithms.</em> Advances in Neural Information Processing Systems 35 (NeurIPS 2022), 7697–7711. DOI: 10.52202/068431-0559. <a href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/32ac710102f0620d0f28d5d05a44fe08-Abstract-Conference.html" target="_blank" rel="noopener">Página del artículo en NeurIPS</a></li>
+      <li><span class="p">Planificación del suministro eléctrico</span>M. V. F. Pereira, L. M. V. G. Pinto (1991). <em>Multi-stage stochastic optimization applied to energy planning.</em> Mathematical Programming, 52, 359–375. <a href="https://doi.org/10.1007/BF01582895" target="_blank" rel="noopener">https://doi.org/10.1007/BF01582895</a></li>
+    </ol>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  // Bandada de estorninos: puntos y pequeñas "v" muestreados alrededor de una cinta curva (semilla fija, imagen estática y vectorial).
+  let s=20251116; const rnd=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};
+  const g=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+  const svg=document.getElementById('flock'), NS='http://www.w3.org/2000/svg';
+  // Cinta curva tipo bandada: borde nítido, densidad variable y aves diminutas.
+  const c=t=>[470+500*t, 200+95*Math.sin(Math.PI*(1.8*t-0.3))];
+  const wid=t=>20+95*Math.pow(Math.sin(Math.PI*t),1.4)*(0.75+0.25*Math.cos(7*t));
+  let d1='', d2='';
+  for(let i=0;i<9000;i++){
+    const t=rnd(), [x0,y0]=c(t), [x1,y1]=c(Math.min(1,t+0.01));
+    const tx=x1-x0, ty=y1-y0, L=Math.hypot(tx,ty)||1, nx=-ty/L, ny=tx/L;
+    const u=(rnd()*2-1), a=Math.sign(u)*Math.pow(Math.abs(u),0.8)*wid(t);
+    const dens=0.55+0.45*Math.sin(11*t+a/30);
+    if(rnd()>dens) continue;
+    const x=x0+nx*a+g()*3, y=y0+ny*a+g()*3;
+    const seg='M'+x.toFixed(1)+' '+y.toFixed(1)+'h.01';
+    if(Math.abs(a)<wid(t)*0.6) d1+=seg; else d2+=seg;
+  }
+  for(const [d,op] of [[d1,0.75],[d2,0.45]]){
+    const e=document.createElementNS(NS,'path'); e.setAttribute('d',d); e.setAttribute('fill','none');
+    e.setAttribute('stroke','#FFFFFF'); e.setAttribute('stroke-opacity',op); e.setAttribute('stroke-width','2.2');
+    e.setAttribute('stroke-linecap','round'); svg.appendChild(e);
+  }
+  // Velo a la izquierda para que el título se lea bien.
+  const defs=document.createElementNS(NS,'defs');
+  defs.innerHTML='<linearGradient id="veil" x1="0" x2="1"><stop offset="0" stop-color="#1E4F96" stop-opacity=".9"/><stop offset=".45" stop-color="#1E4F96" stop-opacity=".35"/><stop offset=".7" stop-color="#1E4F96" stop-opacity="0"/></linearGradient>';
+  svg.appendChild(defs);
+  const veil=document.createElementNS(NS,'rect'); veil.setAttribute('width','1000'); veil.setAttribute('height','400'); veil.setAttribute('fill','url(#veil)'); svg.appendChild(veil);
+})();
+</script>
+<script>
+// Ventanas emergentes: se abren con los botones data-open; se cierran con ×, con Esc o al hacer clic fuera.
+// El video se carga solo al abrir su ventana y se descarga al cerrarla (así se detiene la música).
+document.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>{
+  const d=document.getElementById(b.dataset.open); const f=d.querySelector('iframe[data-src]');
+  if(f&&!f.src) f.src=f.dataset.src; d.showModal() }));
+document.querySelectorAll('dialog').forEach(d=>{
+  d.querySelector('.close').addEventListener('click',()=>d.close());
+  d.addEventListener('click',e=>{ if(e.target===d) d.close() });
+  d.addEventListener('close',()=>{ const f=d.querySelector('iframe[data-src]'); if(f) f.removeAttribute('src') });
+});
+</script>
+
+</body></html>
